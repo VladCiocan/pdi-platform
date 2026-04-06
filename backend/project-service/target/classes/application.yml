@@ -1,0 +1,11 @@
+server:
+  port: ${PROJECT_PORT:8090}
+
+spring:
+  application:
+    name: project-service
+
+logging:
+  level:
+    ro.pdi.project: INFO
+    org.springframework.web: INFO

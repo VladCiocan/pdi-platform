@@ -1,0 +1,160 @@
+_format_version: "3.0"
+
+services:
+  - name: auth-service
+    url: http://auth-service:8081
+    routes:
+      - name: auth-routes
+        paths:
+          - /api/v1/auth
+        strip_path: false
+        preserve_host: true
+    plugins:
+      - name: cors
+        config:
+          origins:
+            - "*"
+          methods:
+            - GET
+            - POST
+            - PUT
+            - DELETE
+            - PATCH
+            - OPTIONS
+          headers:
+            - Accept
+            - Authorization
+            - Content-Type
+          credentials: true
+          max_age: 3600
+      - name: rate-limiting
+        config:
+          minute: 100
+          policy: local
+          fault_tolerant: true
+          hide_client_headers: false
+
+  - name: tax-service
+    url: http://tax-service:8082
+    routes:
+      - name: tax-routes
+        paths:
+          - /api/v1/taxes
+        strip_path: false
+    plugins:
+      - name: jwt
+      - name: rate-limiting
+        config:
+          minute: 60
+          policy: local
+
+  - name: urbanism-service
+    url: http://urbanism-service:8083
+    routes:
+      - name: urbanism-routes
+        paths:
+          - /api/v1/urbanism
+        strip_path: false
+    plugins:
+      - name: jwt
+      - name: rate-limiting
+        config:
+          minute: 60
+          policy: local
+
+  - name: agriculture-service
+    url: http://agriculture-service:8084
+    routes:
+      - name: agriculture-routes
+        paths:
+          - /api/v1/agriculture
+        strip_path: false
+    plugins:
+      - name: jwt
+      - name: rate-limiting
+        config:
+          minute: 60
+          policy: local
+
+  - name: infrastructure-service
+    url: http://infrastructure-service:8085
+    routes:
+      - name: infrastructure-routes
+        paths:
+          - /api/v1/infrastructure
+        strip_path: false
+    plugins:
+      - name: jwt
+      - name: rate-limiting
+        config:
+          minute: 60
+          policy: local
+
+  - name: dms-service
+    url: http://dms-service:8086
+    routes:
+      - name: dms-routes
+        paths:
+          - /api/v1/dms
+        strip_path: false
+    plugins:
+      - name: jwt
+      - name: rate-limiting
+        config:
+          minute: 60
+          policy: local
+
+  - name: erp-service
+    url: http://erp-service:8087
+    routes:
+      - name: erp-routes
+        paths:
+          - /api/v1/erp
+        strip_path: false
+    plugins:
+      - name: jwt
+      - name: rate-limiting
+        config:
+          minute: 60
+          policy: local
+
+  - name: gis-service
+    url: http://gis-service:8088
+    routes:
+      - name: gis-routes
+        paths:
+          - /api/v1/gis
+        strip_path: false
+    plugins:
+      - name: jwt
+      - name: rate-limiting
+        config:
+          minute: 60
+          policy: local
+
+  - name: chatbot-service
+    url: http://chatbot-service:8089
+    routes:
+      - name: chatbot-routes
+        paths:
+          - /api/v1/chatbot
+        strip_path: false
+
+  - name: project-service
+    url: http://project-service:8090
+    routes:
+      - name: project-routes
+        paths:
+          - /api/v1/projects
+        strip_path: false
+    plugins:
+      - name: jwt
+      - name: rate-limiting
+        config:
+          minute: 60
+          policy: local
+
+plugins:
+  - name: jwt
+    config:
+      key_claim_name: kid

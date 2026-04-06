@@ -1,0 +1,215 @@
+name: PDI Platform CI/CD
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  # Build and Test Common Modules
+  build-common:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build common-model
+        run: |
+          cd backend
+          mvn -B clean install -pl common/common-model -am -DskipTests
+
+      - name: Build common-security
+        run: |
+          cd backend
+          mvn -B clean install -pl common/common-security -am -DskipTests
+
+      - name: Build common-exception
+        run: |
+          cd backend
+          mvn -B clean install -pl common/common-exception -am -DskipTests
+
+      - name: Build common-utils
+        run: |
+          cd backend
+          mvn -B clean install -pl common/common-utils -am -DskipTests
+
+  # Build Auth Service
+  build-auth-service:
+    runs-on: ubuntu-latest
+    needs: build-common
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build Auth Service
+        run: |
+          cd backend
+          mvn -B clean package -pl auth-service -am -DskipTests
+
+      - name: Run unit tests
+        run: |
+          cd backend/auth-service
+          mvn test -Dtest=*Test
+
+      - name: Upload test reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: auth-service-test-reports
+          path: backend/auth-service/target/surefire-reports/
+
+  # Build Backend Services
+  build-backend-services:
+    runs-on: ubuntu-latest
+    needs: build-common
+    strategy:
+      matrix:
+        service: [tax-service, urbanism-service, agriculture-service, infrastructure-service]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build ${{ matrix.service }}
+        run: |
+          cd backend
+          mvn -B clean package -pl ${{ matrix.service }} -am -DskipTests
+
+  # Build Frontend
+  build-frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/web-app/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd frontend/web-app
+          npm ci
+
+      - name: Lint
+        run: |
+          cd frontend/web-app
+          npm run lint
+
+      - name: Run tests
+        run: |
+          cd frontend/web-app
+          npm run test:ci
+
+      - name: Build
+        run: |
+          cd frontend/web-app
+          npm run build
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-build
+          path: frontend/web-app/dist
+
+  # Docker Build and Push
+  docker-build:
+    runs-on: ubuntu-latest
+    needs: [build-auth-service, build-backend-services, build-frontend]
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=ref,branch=main
+            type=ref,branch=develop
+            type=sha,prefix={{branch}}-
+            type=raw,value=latest,enable={{branch == 'main'}}
+
+      - name: Build and push Auth Service
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend/auth-service
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-auth-service:${{ github.sha }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build and push API Gateway
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend/gateway/api-gateway
+          push: true
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}-gateway:${{ github.sha }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  # Deploy to Staging
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: docker-build
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    steps:
+      - name: Deploy to staging
+        run: |
+          echo "Deploying to staging environment..."
+          # Add actual deployment commands here
+          # kubectl apply -f kubernetes/staging/ -n pdi-staging
+
+  # Deploy to Production
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: docker-build
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    steps:
+      - name: Deploy to production
+        run: |
+          echo "Deploying to production environment..."
+          # Add actual deployment commands here
+          # kubectl apply -f kubernetes/production/ -n pdi-production

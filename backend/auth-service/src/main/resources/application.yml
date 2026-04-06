@@ -1,0 +1,173 @@
+server:
+  port: 8081
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+spring:
+  application:
+    name: auth-service
+
+  datasource:
+    url: jdbc:postgresql://${PDI_DB_HOST:localhost}:${PDI_DB_PORT:5432}/${PDI_DB_NAME:pdi}
+    username: ${PDI_DB_USER:pdi_user}
+    password: ${PDI_DB_PASSWORD:pdi_pass_2024}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      connection-timeout: 20000
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  data:
+    redis:
+      host: ${PDI_REDIS_HOST:localhost}
+      port: ${PDI_REDIS_PORT:6379}
+      password: ${PDI_REDIS_PASSWORD:}
+      timeout: 2000ms
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 2
+          max-wait: -1ms
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+    default-property-inclusion: non_null
+
+# Application specific configuration
+app:
+  jwt:
+    secret: ${PDI_JWT_SECRET:pd1-s3cr3t-k3y-f0r-t0k3n-g3n3r4t10n-2024-nuc3t}
+    access-token-validity: 900000  # 15 minutes in milliseconds
+    refresh-token-validity: 604800000  # 7 days in milliseconds
+    issuer: PDI Platform
+    audience: PDI Citizens and Employees
+
+  security:
+    bcrypt-cost: 12
+    max-sessions-per-user: 5
+    session-timeout: 3600000  # 1 hour in milliseconds
+    require-email-verification: true
+    require-2fa-for-roles: ADMIN_SYSTEM,ADMIN_PORTAL
+
+  cors:
+    allowed-origins: ${PDI_CORS_ORIGINS:http://localhost:4200,http://localhost:8080}
+    allowed-methods: GET,POST,PUT,DELETE,PATCH,OPTIONS
+    allowed-headers: "*"
+    allow-credentials: true
+    max-age: 3600
+
+  registration:
+    allow-self-registration: true
+    require-email-verification: true
+    default-role: CITIZEN
+
+# Logging configuration
+logging:
+  level:
+    root: INFO
+    ro.pdi.auth: DEBUG
+    org.springframework.security: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/auth-service.log
+    max-size: 10MB
+    max-history: 30
+
+# Management endpoints
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when_authorized
+      probes:
+        enabled: true
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
+
+# OpenAPI/Swagger configuration
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    tryItOutEnabled: true
+
+---
+# Development profile overrides
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+
+logging:
+  level:
+    ro.pdi.auth: TRACE
+    org.springframework.security: TRACE
+
+---
+# Production profile overrides
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: false
+
+logging:
+  level:
+    root: WARN
+    ro.pdi.auth: INFO
+    org.springframework.security: WARN
+
+app:
+  jwt:
+    secret: ${PDI_JWT_SECRET}
+  cors:
+    allowed-origins: ${PDI_CORS_ORIGINS}

@@ -1,0 +1,124 @@
+server:
+  port: 8083
+  servlet:
+    context-path: /
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+spring:
+  application:
+    name: urbanism-service
+
+  datasource:
+    url: jdbc:postgresql://${PDI_DB_HOST:localhost}:${PDI_DB_PORT:5432}/${PDI_DB_NAME:pdi}
+    username: ${PDI_DB_USER:pdi_user}
+    password: ${PDI_DB_PASSWORD:pdi_pass_2024}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      idle-timeout: 300000
+      max-lifetime: 1200000
+      connection-timeout: 20000
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: false
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        format_sql: true
+        jdbc:
+          batch_size: 20
+        order_inserts: true
+        order_updates: true
+
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+    default-property-inclusion: non_null
+
+app:
+  jwt:
+    secret: ${PDI_JWT_SECRET:pd1-s3cr3t-k3y-f0r-t0k3n-g3n3r4t10n-2024-nuc3t}
+    
+  urbanism:
+    tax:
+      certificate-urbanism: 100
+      authorization-construction: 0.01
+      authorization-demolition: 50
+      certificate-nomenclature: 50
+      regularization-rate: 0.01
+    validity:
+      certificate-urbanism-months: 12
+      authorization-months: 24
+      cns-months: 12
+
+  cors:
+    allowed-origins: ${PDI_CORS_ORIGINS:http://localhost:4200,http://localhost:8080}
+
+logging:
+  level:
+    root: INFO
+    ro.pdi.urbanism: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file:
+    name: logs/urbanism-service.log
+    max-size: 10MB
+    max-history: 30
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+      base-path: /actuator
+  endpoint:
+    health:
+      show-details: when_authorized
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+  jpa:
+    show-sql: true
+    hibernate:
+      ddl-auto: update
+
+logging:
+  level:
+    ro.pdi.urbanism: TRACE
+
+---
+spring:
+  config:
+    activate:
+      on-profile: prod
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+logging:
+  level:
+    root: WARN
+    ro.pdi.urbanism: INFO
+
+app:
+  jwt:
+    secret: ${PDI_JWT_SECRET}
+  cors:
+    allowed-origins: ${PDI_CORS_ORIGINS}

@@ -1,0 +1,273 @@
+services:
+  # PostgreSQL with PostGIS
+  postgres:
+    image: postgis/postgis:15-3.4
+    container_name: pdi-postgres
+    environment:
+      POSTGRES_DB: pdi
+      POSTGRES_USER: pdi_user
+      POSTGRES_PASSWORD: pdi_pass_2024
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+      - ./database/init:/docker-entrypoint-initdb.d
+    networks:
+      - pdi-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pdi_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis
+  redis:
+    image: redis:7-alpine
+    container_name: pdi-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./data/redis:/data
+    networks:
+      - pdi-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Auth Service
+  auth-service:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile.services
+      target: auth
+    container_name: pdi-auth-service
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SERVER_PORT: 8081
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pdi
+      SPRING_DATASOURCE_USERNAME: pdi_user
+      SPRING_DATASOURCE_PASSWORD: pdi_pass_2024
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+      JWT_SECRET: pdi_jwt_secret_key_2024_very_long_and_secure
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - pdi-network
+
+  # Tax Service
+  tax-service:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile.services
+      target: tax
+    container_name: pdi-tax-service
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SERVER_PORT: 8082
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pdi
+      SPRING_DATASOURCE_USERNAME: pdi_user
+      SPRING_DATASOURCE_PASSWORD: pdi_pass_2024
+    ports:
+      - "8082:8082"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pdi-network
+
+  # Urbanism Service
+  urbanism-service:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile.services
+      target: urbanism
+    container_name: pdi-urbanism-service
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SERVER_PORT: 8083
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pdi
+      SPRING_DATASOURCE_USERNAME: pdi_user
+      SPRING_DATASOURCE_PASSWORD: pdi_pass_2024
+    ports:
+      - "8083:8083"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pdi-network
+
+  # Agriculture Service
+  agriculture-service:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile.services
+      target: agriculture
+    container_name: pdi-agriculture-service
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SERVER_PORT: 8084
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pdi
+      SPRING_DATASOURCE_USERNAME: pdi_user
+      SPRING_DATASOURCE_PASSWORD: pdi_pass_2024
+    ports:
+      - "8084:8084"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pdi-network
+
+  # Infrastructure Service
+  infrastructure-service:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile.services
+      target: infrastructure
+    container_name: pdi-infrastructure-service
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SERVER_PORT: 8085
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pdi
+      SPRING_DATASOURCE_USERNAME: pdi_user
+      SPRING_DATASOURCE_PASSWORD: pdi_pass_2024
+    ports:
+      - "8085:8085"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pdi-network
+
+  # ERP Service
+  erp-service:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile.services
+      target: erp
+    container_name: pdi-erp-service
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SERVER_PORT: 8086
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pdi
+      SPRING_DATASOURCE_USERNAME: pdi_user
+      SPRING_DATASOURCE_PASSWORD: pdi_pass_2024
+    ports:
+      - "8086:8086"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pdi-network
+
+  # DMS Service
+  dms-service:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile.services
+      target: dms
+    container_name: pdi-dms-service
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SERVER_PORT: 8087
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pdi
+      SPRING_DATASOURCE_USERNAME: pdi_user
+      SPRING_DATASOURCE_PASSWORD: pdi_pass_2024
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+    ports:
+      - "8087:8087"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - pdi-network
+
+  # GIS Service
+  gis-service:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile.services
+      target: gis
+    container_name: pdi-gis-service
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SERVER_PORT: 8088
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pdi
+      SPRING_DATASOURCE_USERNAME: pdi_user
+      SPRING_DATASOURCE_PASSWORD: pdi_pass_2024
+    ports:
+      - "8088:8088"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pdi-network
+
+  # Project Service
+  project-service:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile.services
+      target: project
+    container_name: pdi-project-service
+    environment:
+      SPRING_PROFILES_ACTIVE: dev
+      SERVER_PORT: 8089
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/pdi
+      SPRING_DATASOURCE_USERNAME: pdi_user
+      SPRING_DATASOURCE_PASSWORD: pdi_pass_2024
+    ports:
+      - "8089:8089"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pdi-network
+
+  # API Gateway (nginx)
+  gateway:
+    image: nginx:alpine
+    container_name: pdi-gateway
+    ports:
+      - "80:80"
+    volumes:
+      - ./gateway/nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - auth-service
+      - tax-service
+      - urbanism-service
+      - agriculture-service
+      - infrastructure-service
+      - erp-service
+      - dms-service
+      - gis-service
+      - project-service
+    networks:
+      - pdi-network
+
+  # Frontend Angular
+  frontend:
+    build:
+      context: ../../frontend/web-app
+      dockerfile: Dockerfile
+    container_name: pdi-frontend
+    ports:
+      - "4200:80"
+    depends_on:
+      - gateway
+    networks:
+      - pdi-network
+
+networks:
+  pdi-network:
+    driver: bridge

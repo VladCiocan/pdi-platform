@@ -1,0 +1,186 @@
+version: '3.9'
+
+services:
+  # PostgreSQL with PostGIS
+  postgres:
+    image: postgis/postgis:15-3.4
+    container_name: pdi-postgres
+    environment:
+      POSTGRES_DB: ${PDI_DB_NAME:-pdi}
+      POSTGRES_USER: ${PDI_DB_USER:-pdi_user}
+      POSTGRES_PASSWORD: ${PDI_DB_PASSWORD:-pdi_pass_2024}
+      POSTGIS_GDAL_DRIVER_PATH: /usr/share/gdal/3.4.0/gdal_MJPEG.so
+      POSTGIS_GDAL_DATA: /usr/share/postgis/3.4.0/gdal
+      POSTGIS_PROJ_DATA: /usr/share/postgis/3.4.0/proj
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./scripts/database/init:/docker-entrypoint-initdb.d
+      - ./scripts/database/migrations:/docker-entrypoint-migrations
+    networks:
+      - pdi-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${PDI_DB_USER:-pdi_user}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: pdi-redis
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - pdi-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
+
+  # Kong API Gateway
+  kong:
+    image: kong:3.4
+    container_name: pdi-kong
+    environment:
+      KONG_DATABASE: postgres
+      KONG_PG_HOST: postgres
+      KONG_PG_PORT: 5432
+      KONG_PG_USER: ${PDI_DB_USER:-pdi_user}
+      KONG_PG_PASSWORD: ${PDI_DB_PASSWORD:-pdi_pass_2024}
+      KONG_PG_DATABASE: ${PDI_DB_NAME:-pdi}
+      KONG_DECLARATIVE_CONFIG: /kong/kong.yml
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
+    ports:
+      - "8000:8000"   # HTTP
+      - "8443:8443"   # HTTPS
+      - "8001:8001"   # Admin API
+    volumes:
+      - ./infrastructure/docker/kong/kong.yml:/kong/kong.yml:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - pdi-network
+    healthcheck:
+      test: ["CMD", "kong", "health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  # Prometheus for metrics
+  prometheus:
+    image: prom/prometheus:v2.48.1
+    container_name: pdi-prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=15d'
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./infrastructure/monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    networks:
+      - pdi-network
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  # Grafana for dashboards
+  grafana:
+    image: grafana/grafana:10.2.3
+    container_name: pdi-grafana
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin123}
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+      GF_SERVER_ROOT_URL: http://localhost:3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infrastructure/monitoring/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./infrastructure/monitoring/datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - prometheus
+    networks:
+      - pdi-network
+
+  # Elasticsearch for logging
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.12.0
+    container_name: pdi-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - indices.query.bool.max_clause_count=1024
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - pdi-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # Kibana for log viewing
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.12.0
+    container_name: pdi-kibana
+    environment:
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    volumes:
+      - ./infrastructure/monitoring/kibana.yml:/usr/share/kibana/config/kibana.yml:ro
+    depends_on:
+      elasticsearch:
+        condition: service_healthy
+    networks:
+      - pdi-network
+
+  # Logstash for log processing
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.12.0
+    container_name: pdi-logstash
+    ports:
+      - "5044:5044"
+      - "9600:9600"
+    volumes:
+      - ./infrastructure/monitoring/logstash/pipeline:/usr/share/logstash/pipeline:ro
+    depends_on:
+      - elasticsearch
+    networks:
+      - pdi-network
+
+networks:
+  pdi-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  redis_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+  elasticsearch_data:
+    driver: local

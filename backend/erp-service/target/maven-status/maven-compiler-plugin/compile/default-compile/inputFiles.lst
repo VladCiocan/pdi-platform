@@ -1,0 +1,10 @@
+C:\Users\devvl\test_opencode\pdi-platform\backend\erp-service\src\main\java\ro\pdi\erp\controller\ErpController.java
+C:\Users\devvl\test_opencode\pdi-platform\backend\erp-service\src\main\java\ro\pdi\erp\ErpServiceApplication.java
+C:\Users\devvl\test_opencode\pdi-platform\backend\erp-service\src\main\java\ro\pdi\erp\model\accounting\ErpAccountingEntry.java
+C:\Users\devvl\test_opencode\pdi-platform\backend\erp-service\src\main\java\ro\pdi\erp\model\accounting\ErpAccountingLine.java
+C:\Users\devvl\test_opencode\pdi-platform\backend\erp-service\src\main\java\ro\pdi\erp\model\budget\ErpBudget.java
+C:\Users\devvl\test_opencode\pdi-platform\backend\erp-service\src\main\java\ro\pdi\erp\model\budget\ErpBudgetExecution.java
+C:\Users\devvl\test_opencode\pdi-platform\backend\erp-service\src\main\java\ro\pdi\erp\model\hr\ErpEmployee.java
+C:\Users\devvl\test_opencode\pdi-platform\backend\erp-service\src\main\java\ro\pdi\erp\model\hr\ErpPayroll.java
+C:\Users\devvl\test_opencode\pdi-platform\backend\erp-service\src\main\java\ro\pdi\erp\model\inventory\ErpFixedAsset.java
+C:\Users\devvl\test_opencode\pdi-platform\backend\erp-service\src\main\java\ro\pdi\erp\model\inventory\ErpInventoryItem.java
