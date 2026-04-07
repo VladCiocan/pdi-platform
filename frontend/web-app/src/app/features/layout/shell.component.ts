@@ -61,6 +61,10 @@ interface NavItem {
               <mat-icon matListItemIcon>settings</mat-icon>
               <span matListItemTitle>Setări</span>
             </a>
+            <a mat-list-item routerLink="/admin/users">
+              <mat-icon matListItemIcon>group</mat-icon>
+              <span matListItemTitle>Utilizatori</span>
+            </a>
             <a mat-list-item (click)="logout()">
               <mat-icon matListItemIcon>logout</mat-icon>
               <span matListItemTitle>Deconectare</span>
@@ -216,10 +220,11 @@ export class ShellComponent {
 
   navItems: NavItem[] = [
     { label: 'Dashboard', icon: 'dashboard', route: '/dashboard' },
+    { label: 'GIS', icon: 'map', route: '/gis' },
     { label: 'Taxe și Impozite', icon: 'account_balance', route: '/taxes' },
     { label: 'Urbanism', icon: 'location_city', route: '/urbanism' },
     { label: 'Agricultură', icon: 'agriculture', route: '/agriculture' },
-    { label: 'Infrastructură', icon: '_construction', route: '/infrastructure' },
+    { label: 'Infrastructură', icon: 'construction', route: '/infrastructure' },
     { label: 'ERP', icon: 'business_center', route: '/erp' },
     { label: 'Documente', icon: 'folder', route: '/dms' },
     { label: 'Proiecte', icon: 'assignment', route: '/project' },

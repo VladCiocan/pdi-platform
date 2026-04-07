@@ -12,11 +12,16 @@ export const routes: Routes = [
     loadChildren: () => import('./features/auth/auth.routes').then(m => m.AUTH_ROUTES)
   },
   {
+    path: 'unauthorized',
+    loadComponent: () => import('./features/unauthorized/unauthorized.component').then(m => m.UnauthorizedComponent)
+  },
+  {
     path: '',
     loadComponent: () => import('./features/layout/shell.component').then(m => m.ShellComponent),
     canActivate: [authGuard],
     children: [
       { path: 'dashboard', loadComponent: () => import('./features/dashboard/dashboard.component').then(m => m.DashboardComponent) },
+      { path: 'profile', loadComponent: () => import('./features/profile/profile.component').then(m => m.ProfileComponent) },
       {
         path: 'taxes',
         loadChildren: () => import('./features/taxes/taxes.routes').then(m => m.TAXES_ROUTES)
@@ -48,6 +53,10 @@ export const routes: Routes = [
       {
         path: 'project',
         loadChildren: () => import('./features/project/project.routes').then(m => m.PROJECT_ROUTES)
+      },
+      {
+        path: 'gis',
+        loadChildren: () => import('./features/gis/gis.routes').then(m => m.GIS_ROUTES)
       }
     ]
   },
