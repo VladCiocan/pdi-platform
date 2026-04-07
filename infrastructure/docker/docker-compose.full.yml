@@ -9,9 +9,6 @@ services:
       POSTGRES_DB: ${PDI_DB_NAME:-pdi}
       POSTGRES_USER: ${PDI_DB_USER:-pdi_user}
       POSTGRES_PASSWORD: ${PDI_DB_PASSWORD:-pdi_pass_2024}
-      POSTGIS_GDAL_DRIVER_PATH: /usr/share/gdal/3.4.0/gdal_MJPEG.so
-      POSTGIS_GDAL_DATA: /usr/share/postgis/3.4.0/gdal
-      POSTGIS_PROJ_DATA: /usr/share/postgis/3.4.0/proj
     ports:
       - "5432:5432"
     volumes:
@@ -42,13 +39,13 @@ services:
       timeout: 3s
       retries: 3
 
-  # Backend - Auth Service
+  # Backend - Auth Service (built from source)
   auth-service:
-    image: eclipse-temurin:17-jre-alpine
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile.services
+      target: auth
     container_name: pdi-auth-service
-    command: java -jar /app/app.jar
-    volumes:
-      - ../../backend/auth-service/target/auth-service-1.0.0-SNAPSHOT.jar:/app/app.jar:ro
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-dev}
       SERVER_PORT: 8081
@@ -57,9 +54,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: ${PDI_DB_PASSWORD:-pdi_pass_2024}
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
-      JWT_SECRET: ${JWT_SECRET:-pdi_jwt_secret_key_2024_very_long_and_secure}
-      JWT_EXPIRATION: 3600000
-      JWT_REFRESH_EXPIRATION: 86400000
+      PDI_JWT_SECRET: ${PDI_JWT_SECRET:-pd1-s3cr3t-k3y-f0r-t0k3n-g3n3r4t10n-2024-nuc3t}
+      PDI_DB_HOST: postgres
     ports:
       - "8081:8081"
     depends_on:
@@ -69,20 +65,23 @@ services:
         condition: service_healthy
     networks:
       - pdi-network
+    restart: unless-stopped
 
-  # Backend - Tax Service
+  # Backend - Tax Service (built from source)
   tax-service:
-    image: eclipse-temurin:17-jre-alpine
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile.services
+      target: tax
     container_name: pdi-tax-service
-    command: java -jar /app/app.jar
-    volumes:
-      - ../../backend/tax-service/target/tax-service-1.0.0-SNAPSHOT.jar:/app/app.jar:ro
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-dev}
       SERVER_PORT: 8082
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${PDI_DB_NAME:-pdi}
       SPRING_DATASOURCE_USERNAME: ${PDI_DB_USER:-pdi_user}
       SPRING_DATASOURCE_PASSWORD: ${PDI_DB_PASSWORD:-pdi_pass_2024}
+      PDI_JWT_SECRET: ${PDI_JWT_SECRET:-pd1-s3cr3t-k3y-f0r-t0k3n-g3n3r4t10n-2024-nuc3t}
+      PDI_DB_HOST: postgres
     ports:
       - "8082:8082"
     depends_on:
@@ -90,20 +89,23 @@ services:
         condition: service_healthy
     networks:
       - pdi-network
+    restart: unless-stopped
 
-  # Backend - Urbanism Service
+  # Backend - Urbanism Service (built from source)
   urbanism-service:
-    image: eclipse-temurin:17-jre-alpine
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile.services
+      target: urbanism
     container_name: pdi-urbanism-service
-    command: java -jar /app/app.jar
-    volumes:
-      - ../../backend/urbanism-service/target/urbanism-service-1.0.0-SNAPSHOT.jar:/app/app.jar:ro
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-dev}
       SERVER_PORT: 8083
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${PDI_DB_NAME:-pdi}
       SPRING_DATASOURCE_USERNAME: ${PDI_DB_USER:-pdi_user}
       SPRING_DATASOURCE_PASSWORD: ${PDI_DB_PASSWORD:-pdi_pass_2024}
+      PDI_JWT_SECRET: ${PDI_JWT_SECRET:-pd1-s3cr3t-k3y-f0r-t0k3n-g3n3r4t10n-2024-nuc3t}
+      PDI_DB_HOST: postgres
     ports:
       - "8083:8083"
     depends_on:
@@ -111,20 +113,23 @@ services:
         condition: service_healthy
     networks:
       - pdi-network
+    restart: unless-stopped
 
-  # Backend - Agriculture Service
+  # Backend - Agriculture Service (built from source)
   agriculture-service:
-    image: eclipse-temurin:17-jre-alpine
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile.services
+      target: agriculture
     container_name: pdi-agriculture-service
-    command: java -jar /app/app.jar
-    volumes:
-      - ../../backend/agriculture-service/target/agriculture-service-1.0.0-SNAPSHOT.jar:/app/app.jar:ro
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-dev}
       SERVER_PORT: 8084
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${PDI_DB_NAME:-pdi}
       SPRING_DATASOURCE_USERNAME: ${PDI_DB_USER:-pdi_user}
       SPRING_DATASOURCE_PASSWORD: ${PDI_DB_PASSWORD:-pdi_pass_2024}
+      PDI_JWT_SECRET: ${PDI_JWT_SECRET:-pd1-s3cr3t-k3y-f0r-t0k3n-g3n3r4t10n-2024-nuc3t}
+      PDI_DB_HOST: postgres
     ports:
       - "8084:8084"
     depends_on:
@@ -132,20 +137,23 @@ services:
         condition: service_healthy
     networks:
       - pdi-network
+    restart: unless-stopped
 
-  # Backend - Infrastructure Service
+  # Backend - Infrastructure Service (built from source)
   infrastructure-service:
-    image: eclipse-temurin:17-jre-alpine
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile.services
+      target: infrastructure
     container_name: pdi-infrastructure-service
-    command: java -jar /app/app.jar
-    volumes:
-      - ../../backend/infrastructure-service/target/infrastructure-service-1.0.0-SNAPSHOT.jar:/app/app.jar:ro
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-dev}
       SERVER_PORT: 8085
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${PDI_DB_NAME:-pdi}
       SPRING_DATASOURCE_USERNAME: ${PDI_DB_USER:-pdi_user}
       SPRING_DATASOURCE_PASSWORD: ${PDI_DB_PASSWORD:-pdi_pass_2024}
+      PDI_JWT_SECRET: ${PDI_JWT_SECRET:-pd1-s3cr3t-k3y-f0r-t0k3n-g3n3r4t10n-2024-nuc3t}
+      PDI_DB_HOST: postgres
     ports:
       - "8085:8085"
     depends_on:
@@ -153,20 +161,23 @@ services:
         condition: service_healthy
     networks:
       - pdi-network
+    restart: unless-stopped
 
-  # Backend - ERP Service
+  # Backend - ERP Service (built from source)
   erp-service:
-    image: eclipse-temurin:17-jre-alpine
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile.services
+      target: erp
     container_name: pdi-erp-service
-    command: java -jar /app/app.jar
-    volumes:
-      - ../../backend/erp-service/target/erp-service-1.0.0-SNAPSHOT.jar:/app/app.jar:ro
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-dev}
       SERVER_PORT: 8086
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${PDI_DB_NAME:-pdi}
       SPRING_DATASOURCE_USERNAME: ${PDI_DB_USER:-pdi_user}
       SPRING_DATASOURCE_PASSWORD: ${PDI_DB_PASSWORD:-pdi_pass_2024}
+      PDI_JWT_SECRET: ${PDI_JWT_SECRET:-pd1-s3cr3t-k3y-f0r-t0k3n-g3n3r4t10n-2024-nuc3t}
+      PDI_DB_HOST: postgres
     ports:
       - "8086:8086"
     depends_on:
@@ -174,20 +185,23 @@ services:
         condition: service_healthy
     networks:
       - pdi-network
+    restart: unless-stopped
 
-  # Backend - DMS Service
+  # Backend - DMS Service (built from source)
   dms-service:
-    image: eclipse-temurin:17-jre-alpine
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile.services
+      target: dms
     container_name: pdi-dms-service
-    command: java -jar /app/app.jar
-    volumes:
-      - ../../backend/dms-service/target/dms-service-1.0.0-SNAPSHOT.jar:/app/app.jar:ro
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-dev}
       SERVER_PORT: 8087
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${PDI_DB_NAME:-pdi}
       SPRING_DATASOURCE_USERNAME: ${PDI_DB_USER:-pdi_user}
       SPRING_DATASOURCE_PASSWORD: ${PDI_DB_PASSWORD:-pdi_pass_2024}
+      PDI_JWT_SECRET: ${PDI_JWT_SECRET:-pd1-s3cr3t-k3y-f0r-t0k3n-g3n3r4t10n-2024-nuc3t}
+      PDI_DB_HOST: postgres
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
     ports:
@@ -199,20 +213,23 @@ services:
         condition: service_healthy
     networks:
       - pdi-network
+    restart: unless-stopped
 
-  # Backend - GIS Service
+  # Backend - GIS Service (built from source)
   gis-service:
-    image: eclipse-temurin:17-jre-alpine
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile.services
+      target: gis
     container_name: pdi-gis-service
-    command: java -jar /app/app.jar
-    volumes:
-      - ../../backend/gis-service/target/gis-service-1.0.0-SNAPSHOT.jar:/app/app.jar:ro
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-dev}
       SERVER_PORT: 8088
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${PDI_DB_NAME:-pdi}
       SPRING_DATASOURCE_USERNAME: ${PDI_DB_USER:-pdi_user}
       SPRING_DATASOURCE_PASSWORD: ${PDI_DB_PASSWORD:-pdi_pass_2024}
+      PDI_JWT_SECRET: ${PDI_JWT_SECRET:-pd1-s3cr3t-k3y-f0r-t0k3n-g3n3r4t10n-2024-nuc3t}
+      PDI_DB_HOST: postgres
     ports:
       - "8088:8088"
     depends_on:
@@ -220,20 +237,23 @@ services:
         condition: service_healthy
     networks:
       - pdi-network
+    restart: unless-stopped
 
-  # Backend - Project Service
+  # Backend - Project Service (built from source)
   project-service:
-    image: eclipse-temurin:17-jre-alpine
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile.services
+      target: project
     container_name: pdi-project-service
-    command: java -jar /app/app.jar
-    volumes:
-      - ../../backend/project-service/target/project-service-1.0.0-SNAPSHOT.jar:/app/app.jar:ro
     environment:
       SPRING_PROFILES_ACTIVE: ${SPRING_PROFILE:-dev}
       SERVER_PORT: 8089
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/${PDI_DB_NAME:-pdi}
       SPRING_DATASOURCE_USERNAME: ${PDI_DB_USER:-pdi_user}
       SPRING_DATASOURCE_PASSWORD: ${PDI_DB_PASSWORD:-pdi_pass_2024}
+      PDI_JWT_SECRET: ${PDI_JWT_SECRET:-pd1-s3cr3t-k3y-f0r-t0k3n-g3n3r4t10n-2024-nuc3t}
+      PDI_DB_HOST: postgres
     ports:
       - "8089:8089"
     depends_on:
@@ -241,6 +261,7 @@ services:
         condition: service_healthy
     networks:
       - pdi-network
+    restart: unless-stopped
 
   # API Gateway (nginx)
   gateway:
@@ -260,24 +281,22 @@ services:
       - dms-service
       - gis-service
       - project-service
+      - frontend
     networks:
       - pdi-network
+    restart: unless-stopped
 
-  # Frontend - Angular
+  # Frontend - Angular (built from source)
   frontend:
     build:
       context: ../../frontend/web-app
       dockerfile: Dockerfile
     container_name: pdi-frontend
-    environment:
-      NG_ENV_API_URL: /api
-      NG_ENV_AUTH_URL: /api/auth
     ports:
       - "4200:80"
-    depends_on:
-      - gateway
     networks:
       - pdi-network
+    restart: unless-stopped
 
 networks:
   pdi-network:

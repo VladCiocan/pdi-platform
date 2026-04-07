@@ -1,4 +1,4 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { Observable, tap, catchError, of, BehaviorSubject } from 'rxjs';
@@ -14,12 +14,17 @@ export class AuthService {
 
   private userSubject = new BehaviorSubject<User | null>(this.getStoredUser());
   user$ = this.userSubject.asObservable();
-  
-  currentUser = computed(() => this.userSubject.value);
-  isAuthenticated = computed(() => !!this.userSubject.value);
 
   constructor(private http: HttpClient, private router: Router) {
     this.initAuth();
+  }
+
+  currentUser(): User | null {
+    return this.userSubject.value;
+  }
+
+  isAuthenticated(): boolean {
+    return !!this.userSubject.value;
   }
 
   private initAuth(): void {

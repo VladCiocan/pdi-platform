@@ -10,8 +10,10 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { HttpClient } from '@angular/common/http';
 import { AuthService } from '../../core/services/auth.service';
 import { User } from '../../core/models/user.model';
+import { environment } from '../../../environments/environment';
 
 @Component({
   selector: 'app-profile',
@@ -36,7 +38,7 @@ import { User } from '../../core/models/user.model';
       @if (user()) {
         <mat-tab-group>
           <!-- Personal Info Tab -->
-          <mat-tab label="Informații Personale">
+          <mat-tab label="Informatii Personale">
             <div class="tab-content">
               <mat-card>
                 <mat-card-header>
@@ -78,12 +80,12 @@ import { User } from '../../core/models/user.model';
                   <div class="actions">
                     @if (!isEditing()) {
                       <button mat-raised-button color="primary" (click)="startEditing()">
-                        <mat-icon>edit</mat-icon> Editează
+                        <mat-icon>edit</mat-icon> Editeaza
                       </button>
                     } @else {
-                      <button mat-button (click)="cancelEdit()">Anulează</button>
-                      <button mat-raised-button color="primary" (click)="saveProfile()">
-                        <mat-icon>save</mat-icon> Salvează
+                      <button mat-button (click)="cancelEdit()">Anuleaza</button>
+                      <button mat-raised-button color="primary" (click)="saveProfile()" [disabled]="saving()">
+                        <mat-icon>save</mat-icon> Salveaza
                       </button>
                     }
                   </div>
@@ -92,8 +94,57 @@ import { User } from '../../core/models/user.model';
             </div>
           </mat-tab>
 
+          <!-- Password Change Tab -->
+          <mat-tab label="Schimbare Parola">
+            <div class="tab-content">
+              <mat-card>
+                <mat-card-header>
+                  <mat-card-title>Schimba Parola</mat-card-title>
+                </mat-card-header>
+                <mat-card-content>
+                  <div class="password-form">
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Parola curenta</mat-label>
+                      <input matInput [type]="showCurrentPassword ? 'text' : 'password'" [(ngModel)]="passwordForm.currentPassword">
+                      <button matSuffix mat-icon-button (click)="showCurrentPassword = !showCurrentPassword">
+                        <mat-icon>{{ showCurrentPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+                      </button>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Parola noua</mat-label>
+                      <input matInput [type]="showNewPassword ? 'text' : 'password'" [(ngModel)]="passwordForm.newPassword">
+                      <button matSuffix mat-icon-button (click)="showNewPassword = !showNewPassword">
+                        <mat-icon>{{ showNewPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+                      </button>
+                      <mat-hint>Minim 8 caractere</mat-hint>
+                    </mat-form-field>
+
+                    <mat-form-field appearance="outline" class="full-width">
+                      <mat-label>Confirma parola noua</mat-label>
+                      <input matInput [type]="showConfirmPassword ? 'text' : 'password'" [(ngModel)]="passwordForm.confirmPassword">
+                      <button matSuffix mat-icon-button (click)="showConfirmPassword = !showConfirmPassword">
+                        <mat-icon>{{ showConfirmPassword ? 'visibility_off' : 'visibility' }}</mat-icon>
+                      </button>
+                    </mat-form-field>
+
+                    @if (passwordError) {
+                      <p class="error-text">{{ passwordError }}</p>
+                    }
+
+                    <div class="actions">
+                      <button mat-raised-button color="primary" (click)="changePassword()" [disabled]="savingPassword()">
+                        <mat-icon>lock</mat-icon> Schimba Parola
+                      </button>
+                    </div>
+                  </div>
+                </mat-card-content>
+              </mat-card>
+            </div>
+          </mat-tab>
+
           <!-- Roles & Permissions Tab -->
-          <mat-tab label="Roluri și Permisiuni">
+          <mat-tab label="Roluri si Permisiuni">
             <div class="tab-content">
               <mat-card>
                 <mat-card-header>
@@ -127,18 +178,18 @@ import { User } from '../../core/models/user.model';
           </mat-tab>
 
           <!-- Activity Tab -->
-          <mat-tab label="Activitate Recentă">
+          <mat-tab label="Activitate Recenta">
             <div class="tab-content">
               <mat-card>
                 <mat-card-content>
-                  <p class="no-data">Nu există activitate recentă de afișat.</p>
+                  <p class="no-data">Nu exista activitate recenta de afisat.</p>
                 </mat-card-content>
               </mat-card>
             </div>
           </mat-tab>
         </mat-tab-group>
       } @else {
-        <p>Nu s-au putut încărca datele profilului.</p>
+        <p>Nu s-au putut incarca datele profilului.</p>
       }
     </div>
   `,
@@ -192,6 +243,21 @@ import { User } from '../../core/models/user.model';
       grid-template-columns: repeat(2, 1fr);
       gap: 16px;
       margin-bottom: 24px;
+    }
+
+    .password-form {
+      max-width: 480px;
+      margin-top: 16px;
+    }
+
+    .full-width {
+      width: 100%;
+    }
+
+    .error-text {
+      color: #f44336;
+      font-size: 14px;
+      margin-bottom: 16px;
     }
 
     .actions {
@@ -251,10 +317,13 @@ import { User } from '../../core/models/user.model';
 })
 export class ProfileComponent implements OnInit {
   private authService = inject(AuthService);
+  private http = inject(HttpClient);
   private snackBar = inject(MatSnackBar);
 
   user = signal<User | null>(null);
   isEditing = signal(false);
+  saving = signal(false);
+  savingPassword = signal(false);
 
   editForm = {
     firstName: '',
@@ -262,10 +331,21 @@ export class ProfileComponent implements OnInit {
     email: ''
   };
 
+  passwordForm = {
+    currentPassword: '',
+    newPassword: '',
+    confirmPassword: ''
+  };
+
+  passwordError = '';
+  showCurrentPassword = false;
+  showNewPassword = false;
+  showConfirmPassword = false;
+
   ngOnInit() {
     const currentUser = this.authService.currentUser();
-    this.user.set(currentUser);
     if (currentUser) {
+      this.user.set(currentUser);
       this.editForm = {
         firstName: currentUser.firstName,
         lastName: currentUser.lastName,
@@ -278,28 +358,13 @@ export class ProfileComponent implements OnInit {
     return `${u.firstName.charAt(0)}${u.lastName.charAt(0)}`;
   }
 
-  getAllPermissions(): string[] {
-    const perms: string[] = [];
-    const user = this.user();
-    if (user) {
-      for (const role of user.roles) {
-        for (const perm of role.permissions) {
-          if (!perms.includes(perm.code)) {
-            perms.push(perm.code);
-          }
-        }
-      }
-    }
-    return perms;
-  }
-
   startEditing() {
     this.isEditing.set(true);
   }
 
   cancelEdit() {
     this.isEditing.set(false);
-    const currentUser = this.authService.currentUser();
+    const currentUser = this.user();
     if (currentUser) {
       this.editForm = {
         firstName: currentUser.firstName,
@@ -310,8 +375,85 @@ export class ProfileComponent implements OnInit {
   }
 
   saveProfile() {
-    // In a real app, would call API to update profile
+    this.saving.set(true);
+    const payload = { ...this.editForm };
+
+    this.http.put(`${environment.authUrl}/profile`, payload).subscribe({
+      next: () => {
+        this.applyProfileChanges();
+        this.saving.set(false);
+        this.snackBar.open('Profilul a fost salvat cu succes', 'Inchide', { duration: 3000 });
+      },
+      error: () => {
+        this.saving.set(false);
+        this.snackBar.open('Eroare la salvarea profilului', 'Inchide', { duration: 3000 });
+      }
+    });
+  }
+
+  private applyProfileChanges() {
     this.isEditing.set(false);
-    this.snackBar.open('Profil salvat cu succes', 'Închide', { duration: 3000 });
+
+    // Update local user signal
+    const currentUser = this.user();
+    if (currentUser) {
+      const updatedUser: User = {
+        ...currentUser,
+        firstName: this.editForm.firstName,
+        lastName: this.editForm.lastName,
+        email: this.editForm.email
+      };
+      this.user.set(updatedUser);
+    }
+  }
+
+  changePassword() {
+    this.passwordError = '';
+
+    if (!this.passwordForm.currentPassword) {
+      this.passwordError = 'Introduceti parola curenta';
+      return;
+    }
+
+    if (this.passwordForm.newPassword.length < 8) {
+      this.passwordError = 'Parola noua trebuie sa aiba minim 8 caractere';
+      return;
+    }
+
+    if (this.passwordForm.newPassword !== this.passwordForm.confirmPassword) {
+      this.passwordError = 'Parolele noi nu corespund';
+      return;
+    }
+
+    if (this.passwordForm.currentPassword === this.passwordForm.newPassword) {
+      this.passwordError = 'Parola noua trebuie sa fie diferita de cea curenta';
+      return;
+    }
+
+    this.savingPassword.set(true);
+
+    this.http.post(`${environment.authUrl}/change-password`, {
+      currentPassword: this.passwordForm.currentPassword,
+      newPassword: this.passwordForm.newPassword
+    }).subscribe({
+      next: () => {
+        this.savingPassword.set(false);
+        this.resetPasswordForm();
+        this.snackBar.open('Parola a fost schimbata cu succes', 'Inchide', { duration: 3000 });
+      },
+      error: () => {
+        this.savingPassword.set(false);
+        this.snackBar.open('Eroare la schimbarea parolei', 'Inchide', { duration: 3000 });
+      }
+    });
+  }
+
+  private resetPasswordForm() {
+    this.passwordForm = {
+      currentPassword: '',
+      newPassword: '',
+      confirmPassword: ''
+    };
+    this.passwordError = '';
   }
 }

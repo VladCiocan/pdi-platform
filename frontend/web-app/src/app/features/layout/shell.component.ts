@@ -9,6 +9,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatBadgeModule } from '@angular/material/badge';
 import { MatTooltipModule } from '@angular/material/tooltip';
+import { MatDividerModule } from '@angular/material/divider';
 import { AuthService } from '../../core/services/auth.service';
 
 interface NavItem {
@@ -33,7 +34,8 @@ interface NavItem {
     MatButtonModule,
     MatMenuModule,
     MatBadgeModule,
-    MatTooltipModule
+    MatTooltipModule,
+    MatDividerModule
   ],
   template: `
     <mat-sidenav-container class="app-container">

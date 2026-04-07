@@ -947,8 +947,8 @@ export class AgricultureListComponent implements OnInit {
         this.loading = false;
       },
       error: () => {
-        this.households = this.getMockHouseholds();
-        this.stats.households = this.households.length;
+        this.showSnackBar('Eroare la incarcarea datelor');
+        this.households = [];
         this.loading = false;
       }
     });
@@ -959,14 +959,17 @@ export class AgricultureListComponent implements OnInit {
         this.stats.parcels = data.length;
       },
       error: () => {
-        this.parcels = this.getMockParcels();
-        this.stats.parcels = this.parcels.length;
+        this.showSnackBar('Eroare la incarcarea datelor');
+        this.parcels = [];
       }
     });
 
     this.agricultureService.getMembers().subscribe({
       next: (data) => this.members = data,
-      error: () => this.members = this.getMockMembers()
+      error: () => {
+        this.showSnackBar('Eroare la incarcarea datelor');
+        this.members = [];
+      }
     });
 
     this.agricultureService.getAnimals().subscribe({
@@ -975,8 +978,8 @@ export class AgricultureListComponent implements OnInit {
         this.stats.animals = data.length;
       },
       error: () => {
-        this.animals = this.getMockAnimals();
-        this.stats.animals = this.animals.length;
+        this.showSnackBar('Eroare la incarcarea datelor');
+        this.animals = [];
       }
     });
 
@@ -986,8 +989,8 @@ export class AgricultureListComponent implements OnInit {
         this.stats.machines = data.length;
       },
       error: () => {
-        this.machines = this.getMockMachines();
-        this.stats.machines = this.machines.length;
+        this.showSnackBar('Eroare la incarcarea datelor');
+        this.machines = [];
       }
     });
   }
@@ -1399,122 +1402,4 @@ export class AgricultureListComponent implements OnInit {
     };
   }
 
-  // Mock data for demo
-  private getMockHouseholds(): AgricultureHousehold[] {
-    return [
-      {
-        id: crypto.randomUUID(),
-        householdCode: 'AGR-001',
-        ownerId: '1',
-        ownerName: 'Popescu Ion',
-        registrationDate: '2024-01-15',
-        isActive: true
-      },
-      {
-        id: crypto.randomUUID(),
-        householdCode: 'AGR-002',
-        ownerId: '2',
-        ownerName: 'Ionescu Maria',
-        registrationDate: '2024-02-20',
-        isActive: true
-      }
-    ];
-  }
-
-  private getMockParcels(): AgricultureParcel[] {
-    return [
-      {
-        id: crypto.randomUUID(),
-        parcelNumber: 'P001',
-        cadastralNumber: '12345',
-        area: 5.5,
-        category: 'ARABLE',
-        usageType: 'OWNED',
-        isActive: true
-      },
-      {
-        id: crypto.randomUUID(),
-        parcelNumber: 'P002',
-        cadastralNumber: '12346',
-        area: 3.2,
-        category: 'PASTURE',
-        usageType: 'LEASED',
-        isActive: true
-      }
-    ];
-  }
-
-  private getMockMembers(): AgricultureMember[] {
-    return [
-      {
-        id: crypto.randomUUID(),
-        householdId: '',
-        firstName: 'Ion',
-        lastName: 'Popescu',
-        cnp: '1234567890123',
-        type: 'OWNER',
-        relation: 'HEAD',
-        phone: '0722123456',
-        isActive: true
-      },
-      {
-        id: crypto.randomUUID(),
-        householdId: '',
-        firstName: 'Elena',
-        lastName: 'Popescu',
-        cnp: '1234567890124',
-        type: 'MEMBER',
-        relation: 'SPOUSE',
-        phone: '0722123457',
-        isActive: true
-      }
-    ];
-  }
-
-  private getMockAnimals(): AgricultureAnimal[] {
-    return [
-      {
-        id: crypto.randomUUID(),
-        householdId: '',
-        animalType: 'BOVINE',
-        species: 'Bălțată',
-        breed: 'Holstein',
-        quantity: 5,
-        isActive: true
-      },
-      {
-        id: crypto.randomUUID(),
-        householdId: '',
-        animalType: 'OVINE',
-        species: 'Țurcană',
-        breed: 'Carpatin',
-        quantity: 20,
-        isActive: true
-      }
-    ];
-  }
-
-  private getMockMachines(): AgricultureMachine[] {
-    return [
-      {
-        id: crypto.randomUUID(),
-        householdId: '',
-        machineType: 'TRACTOR',
-        registrationNumber: 'AB-12-ABC',
-        brand: 'John Deere',
-        model: '5050E',
-        horsePower: 50,
-        isActive: true
-      },
-      {
-        id: crypto.randomUUID(),
-        householdId: '',
-        machineType: 'PLOW',
-        brand: 'Kverneland',
-        model: 'EG 100',
-        horsePower: 0,
-        isActive: true
-      }
-    ];
-  }
 }

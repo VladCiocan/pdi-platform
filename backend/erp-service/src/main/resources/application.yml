@@ -21,6 +21,10 @@ spring:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         format_sql: true
 
+app:
+  jwt:
+    secret: ${PDI_JWT_SECRET:pd1-s3cr3t-k3y-f0r-t0k3n-g3n3r4t10n-2024-nuc3t}
+
 logging:
   level:
     ro.pdi.erp: INFO

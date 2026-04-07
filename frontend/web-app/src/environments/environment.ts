@@ -1,16 +1,16 @@
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8000/api/v1',
-  authUrl: 'http://localhost:8000/api/v1/auth',
+  apiUrl: '/api',
+  authUrl: '/api/auth',
   keycloak: {
-    url: 'http://localhost:8180',
+    url: '/keycloak',
     realm: 'pdi-platform',
     clientId: 'pdi-web-app'
   },
-  gisUrl: 'http://localhost:8000/geoserver',
-  chatbotUrl: 'http://localhost:8000/api/v1/chatbot',
+  gisUrl: '/api/gis',
+  chatbotUrl: '/api/chatbot',
   minio: {
-    endpoint: 'localhost',
+    endpoint: '',
     port: 9000,
     bucket: 'pdi-documents'
   }

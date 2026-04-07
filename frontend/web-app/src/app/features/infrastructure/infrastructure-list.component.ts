@@ -13,6 +13,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatBadgeModule } from '@angular/material/badge';
+import { catchError, of } from 'rxjs';
 import { InfrastructureService } from '../../core/services/infrastructure.service';
 import {
   InfrastructureNetwork,
@@ -676,37 +677,28 @@ export class InfrastructureListComponent implements OnInit {
   }
 
   loadData() {
-    this.infrastructureService.getNetworks().subscribe({
-      next: (data) => { this.networks = data; this.stats.networks = data.length; },
-      error: () => { this.networks = this.getMockNetworks(); this.stats.networks = this.networks.length; }
+    this.infrastructureService.getNetworks().pipe(
+      catchError(() => { this.showSnackBar('Eroare la incarcarea datelor'); return of([] as InfrastructureNetwork[]); })
+    ).subscribe((data) => {
+      this.networks = data;
+      this.stats.networks = data.length;
     });
 
-    this.infrastructureService.getAssets().subscribe({
-      next: (data) => { 
-        this.assets = data; 
-        this.filteredAssets = data;
-        this.stats.assets = data.length; 
-      },
-      error: () => { 
-        this.assets = this.getMockAssets(); 
-        this.filteredAssets = this.assets;
-        this.stats.assets = this.assets.length; 
-      }
+    this.infrastructureService.getAssets().pipe(
+      catchError(() => { this.showSnackBar('Eroare la incarcarea datelor'); return of([] as InfrastructureAsset[]); })
+    ).subscribe((data) => {
+      this.assets = data;
+      this.filteredAssets = data;
+      this.stats.assets = data.length;
     });
 
-    this.infrastructureService.getIncidents().subscribe({
-      next: (data) => { 
-        this.incidents = data; 
-        this.filteredIncidents = data;
-        this.stats.incidents = data.length;
-        this.stats.criticalIncidents = data.filter(i => i.severity === 'CRITICAL' && i.status !== 'CLOSED').length;
-      },
-      error: () => { 
-        this.incidents = this.getMockIncidents(); 
-        this.filteredIncidents = this.incidents;
-        this.stats.incidents = this.incidents.length;
-        this.stats.criticalIncidents = this.incidents.filter(i => i.severity === 'CRITICAL' && i.status !== 'CLOSED').length;
-      }
+    this.infrastructureService.getIncidents().pipe(
+      catchError(() => { this.showSnackBar('Eroare la incarcarea datelor'); return of([] as InfrastructureIncident[]); })
+    ).subscribe((data) => {
+      this.incidents = data;
+      this.filteredIncidents = data;
+      this.stats.incidents = data.length;
+      this.stats.criticalIncidents = data.filter(i => i.severity === 'CRITICAL' && i.status !== 'CLOSED').length;
     });
   }
 
@@ -905,32 +897,4 @@ export class InfrastructureListComponent implements OnInit {
     };
   }
 
-  // Mock data
-  private getMockNetworks(): InfrastructureNetwork[] {
-    return [
-      { id: crypto.randomUUID(), networkType: 'WATER', name: 'Rețea Apă Potabilă', description: 'Alimentare cu apă a municipiului', status: 'ACTIVE', totalLength: 125.5, installationDate: '2010-05-15', isActive: true },
-      { id: crypto.randomUUID(), networkType: 'SEWERAGE', name: 'Rețea Canalizare', description: 'Canalizare menajeră', status: 'ACTIVE', totalLength: 98.3, installationDate: '2010-05-15', isActive: true },
-      { id: crypto.randomUUID(), networkType: 'ELECTRICITY', name: 'Rețea Electricitate', description: 'Alimentare cu energie electrică', status: 'ACTIVE', totalLength: 156.8, installationDate: '2008-03-20', isActive: true },
-      { id: crypto.randomUUID(), networkType: 'LIGHTING', name: 'Iluminat Public', description: 'Iluminat stradal', status: 'UNDER_REPAIR', totalLength: 45.2, installationDate: '2015-01-10', isActive: true }
-    ];
-  }
-
-  private getMockAssets(): InfrastructureAsset[] {
-    return [
-      { id: crypto.randomUUID(), networkId: '', assetType: 'PUMP', name: 'Pompă CP-1', serialNumber: 'PM-2024-001', manufacturer: 'Grundfos', model: 'CR 32', status: 'ACTIVE', installationDate: '2020-06-15', isActive: true },
-      { id: crypto.randomUUID(), networkId: '', assetType: 'METER', name: 'Contor Apă SC-1', serialNumber: 'MT-2024-002', manufacturer: 'Sensus', model: 'OMNI', status: 'ACTIVE', installationDate: '2021-03-10', isActive: true },
-      { id: crypto.randomUUID(), networkId: '', assetType: 'VALVE', name: 'Vană V-123', serialNumber: 'VL-2024-003', manufacturer: 'Danfoss', model: 'HB', status: 'ACTIVE', installationDate: '2019-08-22', isActive: true },
-      { id: crypto.randomUUID(), networkId: '', assetType: 'HYDRANT', name: 'Hidrant H-45', serialNumber: 'HY-2024-004', manufacturer: 'Tyco', status: 'ACTIVE', installationDate: '2018-04-12', isActive: true },
-      { id: crypto.randomUUID(), networkId: '', assetType: 'TRANSFORMER', name: 'Transformator TR-10', serialNumber: 'TR-2024-005', manufacturer: 'Siemens', status: 'ACTIVE', installationDate: '2017-11-30', isActive: true }
-    ];
-  }
-
-  private getMockIncidents(): InfrastructureIncident[] {
-    return [
-      { id: crypto.randomUUID(), incidentType: 'LEAK', severity: 'CRITICAL', description: 'Scurgere majoră pe conducta principală', status: 'IN_PROGRESS', reportedAt: '2024-03-15T10:30:00', isActive: true },
-      { id: crypto.randomUUID(), incidentType: 'MALFUNCTION', severity: 'HIGH', description: 'Pompă defectă stație CP-2', status: 'NEW', reportedAt: '2024-03-18T14:20:00', isActive: true },
-      { id: crypto.randomUUID(), incidentType: 'BLOCKAGE', severity: 'MEDIUM', description: 'Canalizare înfundată strada Victoriei', status: 'RESOLVED', reportedAt: '2024-03-10T09:15:00', resolvedAt: '2024-03-11T16:00:00', isActive: true },
-      { id: crypto.randomUUID(), incidentType: 'PLANNED_WORK', severity: 'LOW', description: 'Întrerupere programată pentru mentenanță', status: 'CLOSED', reportedAt: '2024-03-01T08:00:00', resolvedAt: '2024-03-01T12:00:00', isActive: true }
-    ];
-  }
 }

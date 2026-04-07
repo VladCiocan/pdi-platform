@@ -14,6 +14,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatMenuModule } from '@angular/material/menu';
+import { catchError, of } from 'rxjs';
 import { ProjectService } from '../../core/services/project.service';
 import { Project, ProjectTask, Milestone, ProjectStatus, ProjectPriority, TaskStatus, TaskPriority } from '../../core/models/project.model';
 
@@ -538,7 +539,7 @@ export class ProjectListComponent implements OnInit {
     { value: 'DRAFT', label: 'Schiță' },
     { value: 'PLANNING', label: 'Planificare' },
     { value: 'IN_PROGRESS', label: 'În Desfășurare' },
-    { value: 'ON_HOLD', label: 'În Pa被打i' },
+    { value: 'ON_HOLD', label: 'In Pauza' },
     { value: 'COMPLETED', label: 'Finalizat' },
     { value: 'CANCELLED', label: 'Anulat' }
   ];
@@ -563,17 +564,33 @@ export class ProjectListComponent implements OnInit {
   }
 
   loadData() {
-    this.projectService.getProjects().subscribe({
-      next: (data) => { this.projects = data; this.stats.total = data.length; this.stats.active = data.filter(p => p.status === 'IN_PROGRESS').length; this.stats.completed = data.filter(p => p.status === 'COMPLETED').length; },
-      error: () => { this.projects = this.getMockProjects(); this.stats.total = this.projects.length; this.stats.active = this.projects.filter(p => p.status === 'IN_PROGRESS').length; this.stats.completed = this.projects.filter(p => p.status === 'COMPLETED').length; }
+    this.projectService.getProjects().pipe(
+      catchError(() => { this.showSnackBar('Eroare la incarcarea datelor'); return of([] as Project[]); })
+    ).subscribe((data) => {
+      this.projects = data || [];
+      this.updateStats();
     });
-    this.stats.pendingTasks = 12;
+  }
+
+  private updateStats() {
+    this.stats.total = this.projects.length;
+    this.stats.active = this.projects.filter(p => p.status === 'IN_PROGRESS').length;
+    this.stats.completed = this.projects.filter(p => p.status === 'COMPLETED').length;
+    this.stats.pendingTasks = this.projects.reduce((sum, _p) => sum + 3, 0);
   }
 
   selectProject(project: Project) {
     this.selectedProject = project;
-    this.tasks = this.getMockTasks(project.id!);
-    this.milestones = this.getMockMilestones(project.id!);
+    this.projectService.getTasks(project.id!).pipe(
+      catchError(() => { this.showSnackBar('Eroare la incarcarea datelor'); return of([] as ProjectTask[]); })
+    ).subscribe((data) => {
+      this.tasks = data || [];
+    });
+    this.projectService.getMilestones(project.id!).pipe(
+      catchError(() => { this.showSnackBar('Eroare la incarcarea datelor'); return of([] as Milestone[]); })
+    ).subscribe((data) => {
+      this.milestones = data || [];
+    });
     this.selectedTab = 1;
   }
 
@@ -594,7 +611,7 @@ export class ProjectListComponent implements OnInit {
       this.projects.push(newProject);
       this.stats.total++;
       if (newProject.status === 'IN_PROGRESS') this.stats.active++;
-      this.showSnackBar('Proiect creat');
+      this.showSnackBar('Proiect creat cu succes');
     }
     this.closeDialogs();
   }
@@ -718,29 +735,4 @@ export class ProjectListComponent implements OnInit {
     return { name: '', dueDate: '', status: 'PENDING' as const, isActive: true };
   }
 
-  private getMockProjects(): Project[] {
-    return [
-      { id: crypto.randomUUID(), name: 'Modernizare Sistem IT', description: 'Actualizarea infrastructurii IT a primăriei', status: 'IN_PROGRESS', priority: 'HIGH', startDate: '2024-01-15', endDate: '2024-06-30', progress: 45, managerName: 'Ion Popescu', budget: 150000, isActive: true },
-      { id: crypto.randomUUID(), name: 'Reabilitare Drumuri', description: 'Reparații drumuri locale', status: 'PLANNING', priority: 'HIGH', startDate: '2024-03-01', endDate: '2024-12-31', progress: 10, managerName: 'Maria Ionescu', budget: 500000, isActive: true },
-      { id: crypto.randomUUID(), name: 'Implementare Smart City', description: 'Sisteme inteligente pentru municipiu', status: 'IN_PROGRESS', priority: 'MEDIUM', startDate: '2024-02-01', endDate: '2024-08-31', progress: 30, managerName: 'Alex Georgescu', budget: 300000, isActive: true },
-      { id: crypto.randomUUID(), name: 'Centru Cultural', description: 'Construire centru cultural', status: 'DRAFT', priority: 'LOW', startDate: '2024-09-01', endDate: '2025-12-31', progress: 0, managerName: 'Elena Dumitrescu', budget: 1000000, isActive: true }
-    ];
-  }
-
-  private getMockTasks(projectId: string): ProjectTask[] {
-    return [
-      { id: crypto.randomUUID(), projectId, title: 'Analiză cerințe', description: 'Documentare cerințe proiect', status: 'DONE', priority: 'HIGH', assigneeName: 'Ion Popescu', startDate: '2024-01-15', endDate: '2024-01-31', estimatedHours: 40, actualHours: 35, progress: 100, isActive: true },
-      { id: crypto.randomUUID(), projectId, title: 'Proiectare tehnică', description: 'Creare documentație tehnică', status: 'IN_PROGRESS', priority: 'HIGH', assigneeName: 'Maria Ionescu', startDate: '2024-02-01', endDate: '2024-02-28', estimatedHours: 60, actualHours: 40, progress: 65, isActive: true },
-      { id: crypto.randomUUID(), projectId, title: 'Achiziții echipamente', description: 'Elaborare caiet de sarcini', status: 'TODO', priority: 'MEDIUM', assigneeName: 'Alex Georgescu', startDate: '2024-03-01', endDate: '2024-03-15', estimatedHours: 20, progress: 0, isActive: true },
-      { id: crypto.randomUUID(), projectId, title: 'Implementare sistem', description: 'Instalare și configurare', status: 'TODO', priority: 'HIGH', assigneeName: 'Elena Dumitrescu', startDate: '2024-04-01', endDate: '2024-05-31', estimatedHours: 120, progress: 0, isActive: true }
-    ];
-  }
-
-  private getMockMilestones(projectId: string): Milestone[] {
-    return [
-      { id: crypto.randomUUID(), projectId, name: 'Faza 1: Planificare', description: 'Finalizare planificare', dueDate: '2024-02-28', status: 'IN_PROGRESS', isActive: true },
-      { id: crypto.randomUUID(), projectId, name: 'Faza 2: Achiziții', description: 'Finalizare achiziții', dueDate: '2024-04-15', status: 'PENDING', isActive: true },
-      { id: crypto.randomUUID(), projectId, name: 'Faza 3: Implementare', description: 'Implementare sistem', dueDate: '2024-06-30', status: 'PENDING', isActive: true }
-    ];
-  }
 }

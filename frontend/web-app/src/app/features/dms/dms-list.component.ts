@@ -567,8 +567,15 @@ export class DmsListComponent implements OnInit {
 
   loadWorkflows() {
     this.dmsService.getWorkflowTasks().subscribe({
-      next: (tasks) => { this.workflowTasks = tasks; this.updateWorkflowStats(); },
-      error: () => { this.workflowTasks = []; }
+      next: (tasks) => {
+        this.workflowTasks = tasks || [];
+        this.updateWorkflowStats();
+      },
+      error: () => {
+        this.showSnackBar('Eroare la incarcarea datelor');
+        this.workflowTasks = [];
+        this.updateWorkflowStats();
+      }
     });
   }
 
@@ -639,17 +646,31 @@ export class DmsListComponent implements OnInit {
 
   loadData() {
     this.dmsService.getRootFolders().subscribe({
-      next: (data) => { this.folders = data; this.stats.folders = data.length; },
-      error: () => { this.folders = this.getMockFolders(); this.stats.folders = this.folders.length; }
+      next: (data) => {
+        this.folders = data || [];
+        this.stats.folders = this.folders.length;
+      },
+      error: () => {
+        this.showSnackBar('Eroare la incarcarea datelor');
+        this.folders = [];
+      }
     });
 
     this.dmsService.getDocuments().subscribe({
-      next: (data) => { this.documents = data; this.filteredDocuments = data; this.stats.documents = data.length; },
-      error: () => { this.documents = this.getMockDocuments(); this.filteredDocuments = this.documents; this.stats.documents = this.documents.length; }
+      next: (data) => {
+        this.documents = data || [];
+        this.filteredDocuments = this.documents;
+        this.stats.documents = this.documents.length;
+      },
+      error: () => {
+        this.showSnackBar('Eroare la incarcarea datelor');
+        this.documents = [];
+        this.filteredDocuments = [];
+      }
     });
 
-    this.stats.storage = 2456789012; // 2.45 GB
-    this.stats.pendingApprovals = 3;
+    this.stats.storage = 0;
+    this.stats.pendingApprovals = 0;
   }
 
   filterDocuments() {
@@ -943,21 +964,4 @@ export class DmsListComponent implements OnInit {
     return { name: '', isActive: true };
   }
 
-  private getMockFolders(): DmsFolder[] {
-    return [
-      { id: crypto.randomUUID(), name: 'Contracte', path: '/Contracte', isActive: true, createdAt: new Date().toISOString() },
-      { id: crypto.randomUUID(), name: 'Facturi', path: '/Facturi', isActive: true, createdAt: new Date().toISOString() },
-      { id: crypto.randomUUID(), name: 'Raportări', path: '/Raportări', isActive: true, createdAt: new Date().toISOString() },
-      { id: crypto.randomUUID(), name: 'Proceduri', path: '/Proceduri', isActive: true, createdAt: new Date().toISOString() }
-    ];
-  }
-
-  private getMockDocuments(): DmsDocument[] {
-    return [
-      { id: crypto.randomUUID(), folderId: '', title: 'Contract furnizor energie', documentType: 'CONTRACT', fileName: 'contract_energie.pdf', version: 2, status: 'APPROVED', fileSize: 1245678, tags: 'contract,energie,2024', isActive: true, createdAt: '2024-02-15T10:00:00', updatedAt: '2024-03-01T14:30:00' },
-      { id: crypto.randomUUID(), folderId: '', title: 'Raport lunar Feb 2024', documentType: 'REPORT', fileName: 'raport_feb2024.xlsx', version: 1, status: 'REVIEW', fileSize: 345678, tags: 'raport,lunar', isActive: true, createdAt: '2024-03-01T09:00:00', updatedAt: '2024-03-01T09:00:00' },
-      { id: crypto.randomUUID(), folderId: '', title: 'Procedură angajare', documentType: 'PROCEDURE', fileName: 'proc_angajare.docx', version: 3, status: 'PUBLISHED', fileSize: 234567, tags: 'procedura,hr,angajare', isActive: true, createdAt: '2024-01-10T11:00:00', updatedAt: '2024-02-20T16:45:00' },
-      { id: crypto.randomUUID(), folderId: '', title: 'Factură utilități', documentType: 'INVOICE', fileName: 'factura_apr_2024.pdf', version: 1, status: 'DRAFT', fileSize: 156789, tags: 'factura,utilitati', isActive: true, createdAt: '2024-03-15T08:00:00', updatedAt: '2024-03-15T08:00:00' }
-    ];
-  }
 }

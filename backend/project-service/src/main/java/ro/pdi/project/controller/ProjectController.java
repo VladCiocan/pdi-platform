@@ -3,149 +3,191 @@ package ro.pdi.project.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ro.pdi.project.model.*;
+import ro.pdi.project.service.ProjectService;
 
-import java.time.LocalDate;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/projects")
 @RequiredArgsConstructor
-@Tag(name = "Proiecte", description = "Management proiecte - taskuri, milestones, rapoarte")
+@Tag(name = "Proiecte", description = "Management proiecte - taskuri, milestones, documente, timp")
 public class ProjectController {
 
+    private final ProjectService projectService;
+
+    // === Projects ===
     @Operation(summary = "Lista proiecte")
     @GetMapping
-    public ResponseEntity<List<Map<String, Object>>> getProjects(
+    public ResponseEntity<List<Project>> getProjects(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) UUID managerId) {
-        return ResponseEntity.ok(new ArrayList<>());
+        return ResponseEntity.ok(projectService.getProjects(status, managerId));
     }
 
     @Operation(summary = "Detalii proiect")
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getProject(@PathVariable UUID id) {
-        Map<String, Object> project = new HashMap<>();
-        project.put("id", id);
-        project.put("name", "Proiect Exemplu");
-        project.put("description", "Descriere proiect");
-        project.put("status", "IN_PROGRESS");
-        project.put("startDate", LocalDate.now());
-        project.put("endDate", LocalDate.now().plusMonths(6));
-        return ResponseEntity.ok(project);
+    public ResponseEntity<Project> getProject(@PathVariable UUID id) {
+        return ResponseEntity.ok(projectService.getProjectById(id));
     }
 
     @Operation(summary = "Creare proiect")
     @PostMapping
-    public ResponseEntity<Map<String, Object>> createProject(@RequestBody Map<String, Object> request) {
-        Map<String, Object> response = new HashMap<>(request);
-        response.put("id", UUID.randomUUID());
-        return ResponseEntity.ok(response);
+    public ResponseEntity<Project> createProject(@RequestBody Project project) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(projectService.createProject(project));
     }
 
     @Operation(summary = "Actualizare proiect")
     @PutMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> updateProject(
-            @PathVariable UUID id,
-            @RequestBody Map<String, Object> request) {
-        Map<String, Object> response = new HashMap<>(request);
-        response.put("id", id);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<Project> updateProject(@PathVariable UUID id, @RequestBody Project project) {
+        return ResponseEntity.ok(projectService.updateProject(id, project));
     }
 
     @Operation(summary = "Stergere proiect")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteProject(@PathVariable UUID id) {
+        projectService.deleteProject(id);
         return ResponseEntity.noContent().build();
     }
 
+    // === Tasks ===
     @Operation(summary = "Lista taskuri proiect")
     @GetMapping("/{projectId}/tasks")
-    public ResponseEntity<List<Map<String, Object>>> getProjectTasks(@PathVariable UUID projectId) {
-        return ResponseEntity.ok(new ArrayList<>());
+    public ResponseEntity<List<ProjectTask>> getProjectTasks(@PathVariable UUID projectId) {
+        return ResponseEntity.ok(projectService.getTasks(projectId));
+    }
+
+    @Operation(summary = "Detalii task")
+    @GetMapping("/{projectId}/tasks/{taskId}")
+    public ResponseEntity<ProjectTask> getTask(@PathVariable UUID projectId, @PathVariable UUID taskId) {
+        return ResponseEntity.ok(projectService.getTaskById(taskId));
     }
 
     @Operation(summary = "Creare task")
     @PostMapping("/{projectId}/tasks")
-    public ResponseEntity<Map<String, Object>> createTask(
-            @PathVariable UUID projectId,
-            @RequestBody Map<String, Object> request) {
-        Map<String, Object> response = new HashMap<>(request);
-        response.put("id", UUID.randomUUID());
-        response.put("projectId", projectId);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<ProjectTask> createTask(@PathVariable UUID projectId, @RequestBody ProjectTask task) {
+        task.setProjectId(projectId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(projectService.createTask(task));
     }
 
+    @Operation(summary = "Actualizare task")
+    @PutMapping("/{projectId}/tasks/{taskId}")
+    public ResponseEntity<ProjectTask> updateTask(
+            @PathVariable UUID projectId,
+            @PathVariable UUID taskId,
+            @RequestBody ProjectTask task) {
+        return ResponseEntity.ok(projectService.updateTask(taskId, task));
+    }
+
+    @Operation(summary = "Stergere task")
+    @DeleteMapping("/{projectId}/tasks/{taskId}")
+    public ResponseEntity<Void> deleteTask(@PathVariable UUID projectId, @PathVariable UUID taskId) {
+        projectService.deleteTask(taskId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // === Milestones ===
     @Operation(summary = "Lista milestones")
     @GetMapping("/{projectId}/milestones")
-    public ResponseEntity<List<Map<String, Object>>> getMilestones(@PathVariable UUID projectId) {
-        return ResponseEntity.ok(new ArrayList<>());
+    public ResponseEntity<List<Milestone>> getMilestones(@PathVariable UUID projectId) {
+        return ResponseEntity.ok(projectService.getMilestones(projectId));
+    }
+
+    @Operation(summary = "Detalii milestone")
+    @GetMapping("/{projectId}/milestones/{milestoneId}")
+    public ResponseEntity<Milestone> getMilestone(@PathVariable UUID projectId, @PathVariable UUID milestoneId) {
+        return ResponseEntity.ok(projectService.getMilestoneById(milestoneId));
     }
 
     @Operation(summary = "Creare milestone")
     @PostMapping("/{projectId}/milestones")
-    public ResponseEntity<Map<String, Object>> createMilestone(
+    public ResponseEntity<Milestone> createMilestone(@PathVariable UUID projectId, @RequestBody Milestone milestone) {
+        milestone.setProjectId(projectId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(projectService.createMilestone(milestone));
+    }
+
+    @Operation(summary = "Actualizare milestone")
+    @PutMapping("/{projectId}/milestones/{milestoneId}")
+    public ResponseEntity<Milestone> updateMilestone(
             @PathVariable UUID projectId,
-            @RequestBody Map<String, Object> request) {
-        Map<String, Object> response = new HashMap<>(request);
-        response.put("id", UUID.randomUUID());
-        return ResponseEntity.ok(response);
+            @PathVariable UUID milestoneId,
+            @RequestBody Milestone milestone) {
+        return ResponseEntity.ok(projectService.updateMilestone(milestoneId, milestone));
     }
 
-    @Operation(summary = "Date diagrama Gantt")
-    @GetMapping("/{projectId}/gantt")
-    public ResponseEntity<Map<String, Object>> getGanttData(@PathVariable UUID projectId) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("projectId", projectId);
-        response.put("tasks", new ArrayList<>());
-        return ResponseEntity.ok(response);
+    @Operation(summary = "Stergere milestone")
+    @DeleteMapping("/{projectId}/milestones/{milestoneId}")
+    public ResponseEntity<Void> deleteMilestone(@PathVariable UUID projectId, @PathVariable UUID milestoneId) {
+        projectService.deleteMilestone(milestoneId);
+        return ResponseEntity.noContent().build();
     }
 
-    @Operation(summary = "Date grafic burndown")
-    @GetMapping("/{projectId}/burndown")
-    public ResponseEntity<Map<String, Object>> getBurndownChart(@PathVariable UUID projectId) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("projectId", projectId);
-        response.put("ideal", new ArrayList<>());
-        response.put("actual", new ArrayList<>());
-        return ResponseEntity.ok(response);
+    // === Time Entries ===
+    @Operation(summary = "Lista inregistrari timp")
+    @GetMapping("/{projectId}/time-entries")
+    public ResponseEntity<List<TimeEntry>> getTimeEntries(@PathVariable UUID projectId) {
+        return ResponseEntity.ok(projectService.getTimeEntries(projectId));
     }
 
     @Operation(summary = "Inregistrare timp lucrat")
     @PostMapping("/{projectId}/time-entries")
-    public ResponseEntity<Map<String, Object>> logTime(
-            @PathVariable UUID projectId,
-            @RequestBody Map<String, Object> request) {
-        Map<String, Object> response = new HashMap<>(request);
-        response.put("id", UUID.randomUUID());
-        return ResponseEntity.ok(response);
+    public ResponseEntity<TimeEntry> createTimeEntry(@PathVariable UUID projectId, @RequestBody TimeEntry timeEntry) {
+        timeEntry.setProjectId(projectId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(projectService.createTimeEntry(timeEntry));
     }
 
-    @Operation(summary = "Raport timp")
-    @GetMapping("/{projectId}/time-report")
-    public ResponseEntity<Map<String, Object>> getTimeReport(@PathVariable UUID projectId) {
-        Map<String, Object> response = new HashMap<>();
-        response.put("projectId", projectId);
-        response.put("totalHours", 0);
-        response.put("byUser", new HashMap<>());
-        return ResponseEntity.ok(response);
+    @Operation(summary = "Stergere inregistrare timp")
+    @DeleteMapping("/{projectId}/time-entries/{timeEntryId}")
+    public ResponseEntity<Void> deleteTimeEntry(@PathVariable UUID projectId, @PathVariable UUID timeEntryId) {
+        projectService.deleteTimeEntry(timeEntryId);
+        return ResponseEntity.noContent().build();
     }
 
+    // === Documents ===
     @Operation(summary = "Documente proiect")
     @GetMapping("/{projectId}/documents")
-    public ResponseEntity<List<Map<String, Object>>> getProjectDocuments(@PathVariable UUID projectId) {
-        return ResponseEntity.ok(new ArrayList<>());
+    public ResponseEntity<List<ProjectDocument>> getDocuments(@PathVariable UUID projectId) {
+        return ResponseEntity.ok(projectService.getDocuments(projectId));
     }
 
-    @Operation(summary = "Buget proiect")
-    @GetMapping("/{projectId}/budget")
-    public ResponseEntity<Map<String, Object>> getProjectBudget(@PathVariable UUID projectId) {
-        Map<String, Object> budget = new HashMap<>();
-        budget.put("projectId", projectId);
-        budget.put("allocated", 0.0);
-        budget.put("spent", 0.0);
-        budget.put("remaining", 0.0);
-        return ResponseEntity.ok(budget);
+    @Operation(summary = "Detalii document")
+    @GetMapping("/{projectId}/documents/{documentId}")
+    public ResponseEntity<ProjectDocument> getDocument(@PathVariable UUID projectId, @PathVariable UUID documentId) {
+        return ResponseEntity.ok(projectService.getDocumentById(documentId));
+    }
+
+    @Operation(summary = "Adaugare document")
+    @PostMapping("/{projectId}/documents")
+    public ResponseEntity<ProjectDocument> createDocument(@PathVariable UUID projectId, @RequestBody ProjectDocument document) {
+        document.setProjectId(projectId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(projectService.createDocument(document));
+    }
+
+    @Operation(summary = "Actualizare document")
+    @PutMapping("/{projectId}/documents/{documentId}")
+    public ResponseEntity<ProjectDocument> updateDocument(
+            @PathVariable UUID projectId,
+            @PathVariable UUID documentId,
+            @RequestBody ProjectDocument document) {
+        return ResponseEntity.ok(projectService.updateDocument(documentId, document));
+    }
+
+    @Operation(summary = "Stergere document")
+    @DeleteMapping("/{projectId}/documents/{documentId}")
+    public ResponseEntity<Void> deleteDocument(@PathVariable UUID projectId, @PathVariable UUID documentId) {
+        projectService.deleteDocument(documentId);
+        return ResponseEntity.noContent().build();
+    }
+
+    // === Stats ===
+    @Operation(summary = "Statistici proiecte")
+    @GetMapping("/stats")
+    public ResponseEntity<Map<String, Object>> getStats() {
+        return ResponseEntity.ok(projectService.getStats());
     }
 }

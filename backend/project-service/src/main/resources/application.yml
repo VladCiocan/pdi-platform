@@ -1,9 +1,26 @@
 server:
-  port: ${PROJECT_PORT:8090}
+  port: ${PROJECT_PORT:8089}
 
 spring:
   application:
     name: project-service
+  datasource:
+    url: jdbc:postgresql://${PDI_DB_HOST:localhost}:${PDI_DB_PORT:5432}/${PDI_DB_NAME:pdi}
+    username: ${PDI_DB_USER:pdi_user}
+    password: ${PDI_DB_PASSWORD:pdi_pass_2024}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+app:
+  jwt:
+    secret: ${PDI_JWT_SECRET:pd1-s3cr3t-k3y-f0r-t0k3n-g3n3r4t10n-2024-nuc3t}
 
 logging:
   level:

@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import ro.pdi.auth.model.User;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,6 +41,21 @@ public interface UserRepository extends JpaRepository<User, UUID> {
      */
     @Query("SELECT u FROM User u WHERE u.email = :email AND u.isActive = true")
     Optional<User> findActiveUserByEmail(@Param("email") String email);
+
+    /**
+     * Find all active users.
+     */
+    List<User> findByIsActiveTrue();
+
+    /**
+     * Count active users.
+     */
+    long countByIsActiveTrue();
+
+    /**
+     * Count inactive users.
+     */
+    long countByIsActiveFalse();
 
     /**
      * Count users by user type.

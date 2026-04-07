@@ -4,6 +4,19 @@ server:
 spring:
   application:
     name: gis-service
+  datasource:
+    url: jdbc:postgresql://${PDI_DB_HOST:localhost}:${PDI_DB_PORT:5432}/${PDI_DB_NAME:pdi}
+    username: ${PDI_DB_USER:pdi_user}
+    password: ${PDI_DB_PASSWORD:pdi_pass_2024}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+
+app:
+  jwt:
+    secret: ${PDI_JWT_SECRET:pd1-s3cr3t-k3y-f0r-t0k3n-g3n3r4t10n-2024-nuc3t}
 
 logging:
   level:

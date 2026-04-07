@@ -13,6 +13,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatDividerModule } from '@angular/material/divider';
+import { catchError, of } from 'rxjs';
 import { ErpService } from '../../core/services/erp.service';
 import {
   ErpEmployee,
@@ -723,27 +724,36 @@ export class ErpListComponent implements OnInit {
   }
 
   loadData() {
-    this.erpService.getEmployees().subscribe({
-      next: (data) => { this.employees = data; this.filteredEmployees = data; this.stats.employees = data.length; },
-      error: () => { this.employees = this.getMockEmployees(); this.filteredEmployees = this.employees; this.stats.employees = this.employees.length; }
+    this.erpService.getEmployees().pipe(
+      catchError(() => { this.showSnackBar('Eroare la incarcarea datelor'); return of([] as ErpEmployee[]); })
+    ).subscribe((data) => {
+      this.employees = data;
+      this.filteredEmployees = data;
+      this.stats.employees = data.length;
     });
 
-    this.erpService.getBudgets().subscribe({
-      next: (data) => { this.budgets = data; this.stats.budgetUtilization = 72; },
-      error: () => { this.budgets = this.getMockBudgets(); this.stats.budgetUtilization = 72; }
+    this.erpService.getBudgets().pipe(
+      catchError(() => { this.showSnackBar('Eroare la incarcarea datelor'); return of([] as ErpBudget[]); })
+    ).subscribe((data) => {
+      this.budgets = data;
+      this.stats.budgetUtilization = 0;
     });
 
-    this.erpService.getAccountingEntries().subscribe({
-      next: (data) => { this.accountingEntries = data; },
-      error: () => { this.accountingEntries = this.getMockAccounting(); }
+    this.erpService.getAccountingEntries().pipe(
+      catchError(() => { this.showSnackBar('Eroare la incarcarea datelor'); return of([] as ErpAccountingEntry[]); })
+    ).subscribe((data) => {
+      this.accountingEntries = data;
     });
 
-    this.erpService.getInventoryItems().subscribe({
-      next: (data) => { this.inventoryItems = data; this.filteredInventory = data; this.calcInventoryValue(); },
-      error: () => { this.inventoryItems = this.getMockInventory(); this.filteredInventory = this.inventoryItems; this.calcInventoryValue(); }
+    this.erpService.getInventoryItems().pipe(
+      catchError(() => { this.showSnackBar('Eroare la incarcarea datelor'); return of([] as ErpInventoryItem[]); })
+    ).subscribe((data) => {
+      this.inventoryItems = data;
+      this.filteredInventory = data;
+      this.calcInventoryValue();
     });
 
-    this.stats.payroll = 245680;
+    this.stats.payroll = 0;
   }
 
   calcInventoryValue() {
@@ -912,38 +922,4 @@ export class ErpListComponent implements OnInit {
     return { code: '', name: '', quantity: 0, unitPrice: 0, inventoryMethod: 'FIFO' as InventoryMethod, status: 'ACTIVE' as ItemStatus, isActive: true };
   }
 
-  // Mock data
-  private getMockEmployees(): ErpEmployee[] {
-    return [
-      { id: crypto.randomUUID(), cnp: '1234567890123', firstName: 'Ion', lastName: 'Popescu', email: 'ion.popescu@email.com', position: 'Developer', department: 'IT', employmentType: 'FULL_TIME', baseSalary: 8500, status: 'ACTIVE', isActive: true },
-      { id: crypto.randomUUID(), cnp: '1234567890124', firstName: 'Maria', lastName: 'Ionescu', email: 'maria.ionescu@email.com', position: 'Contabil', department: 'Finance', employmentType: 'FULL_TIME', baseSalary: 7200, status: 'ACTIVE', isActive: true },
-      { id: crypto.randomUUID(), cnp: '1234567890125', firstName: 'Alexandru', lastName: 'Georgescu', email: 'alex.georgescu@email.com', position: 'Manager', department: 'Operations', employmentType: 'FULL_TIME', baseSalary: 12000, status: 'ACTIVE', isActive: true },
-      { id: crypto.randomUUID(), cnp: '1234567890126', firstName: 'Elena', lastName: 'Dumitrescu', email: 'elena.d@email.com', position: 'HR Specialist', department: 'HR', employmentType: 'FULL_TIME', baseSalary: 6500, status: 'ACTIVE', isActive: true }
-    ];
-  }
-
-  private getMockBudgets(): ErpBudget[] {
-    return [
-      { id: crypto.randomUUID(), year: 2024, classificationCode: '51.01', chapter: '51', article: '01', authorizedCredit: 500000, revisedCredit: 480000, status: 'APPROVED', isActive: true },
-      { id: crypto.randomUUID(), year: 2024, classificationCode: '51.02', chapter: '51', article: '02', authorizedCredit: 300000, revisedCredit: 320000, status: 'REVISED', isActive: true },
-      { id: crypto.randomUUID(), year: 2024, classificationCode: '65.01', chapter: '65', article: '01', authorizedCredit: 150000, revisedCredit: 150000, status: 'APPROVED', isActive: true }
-    ];
-  }
-
-  private getMockAccounting(): ErpAccountingEntry[] {
-    return [
-      { id: crypto.randomUUID(), entryDate: '2024-03-15', documentNumber: 'FAC-2024-001', documentType: 'INVOICE', description: 'Factură furnizor materiale', totalDebit: 25000, totalCredit: 25000, isPosted: true, postedAt: '2024-03-15T10:00:00', isReversed: false, isActive: true },
-      { id: crypto.randomUUID(), entryDate: '2024-03-16', documentNumber: 'FAC-2024-002', documentType: 'INVOICE', description: 'Factură utilități', totalDebit: 8500, totalCredit: 8500, isPosted: true, postedAt: '2024-03-16T14:30:00', isReversed: false, isActive: true },
-      { id: crypto.randomUUID(), entryDate: '2024-03-18', documentNumber: 'REC-2024-015', documentType: 'RECEIPT', description: 'Încasare servicii', totalDebit: 15000, totalCredit: 15000, isPosted: false, isReversed: false, isActive: true }
-    ];
-  }
-
-  private getMockInventory(): ErpInventoryItem[] {
-    return [
-      { id: crypto.randomUUID(), code: 'PRD-001', name: 'Laptop Dell XPS 15', category: 'Electronics', unitOfMeasure: 'buc', quantity: 5, unitPrice: 8500, totalValue: 42500, inventoryMethod: 'FIFO', minStock: 2, status: 'ACTIVE', isActive: true },
-      { id: crypto.randomUUID(), code: 'PRD-002', name: 'Monitor LG 27"', category: 'Electronics', unitOfMeasure: 'buc', quantity: 12, unitPrice: 1200, totalValue: 14400, inventoryMethod: 'FIFO', minStock: 5, status: 'ACTIVE', isActive: true },
-      { id: crypto.randomUUID(), code: 'PRD-003', name: 'Birou configurabil', category: 'Furniture', unitOfMeasure: 'buc', quantity: 8, unitPrice: 2200, totalValue: 17600, inventoryMethod: 'FIFO', minStock: 3, status: 'ACTIVE', isActive: true },
-      { id: crypto.randomUUID(), code: 'PRD-004', name: 'Caiete A4', category: 'Supplies', unitOfMeasure: 'cut', quantity: 50, unitPrice: 25, totalValue: 1250, inventoryMethod: 'PMP', minStock: 20, status: 'ACTIVE', isActive: true }
-    ];
-  }
 }

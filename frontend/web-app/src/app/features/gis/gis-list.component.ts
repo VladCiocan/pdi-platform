@@ -31,7 +31,6 @@ import {
 
 // Leaflet imports
 import * as L from 'leaflet';
-import { Marker, LatLng, Layer, Icon } from 'leaflet';
 
 @Component({
   selector: 'app-gis-list',
@@ -795,20 +794,16 @@ export class GisListComponent implements OnInit, AfterViewInit, OnDestroy {
   private initMap() {
     if (this.map) return;
 
-    // Fix default marker icon issue in Leaflet + Webpack
-    const defaultIcon = L.icon({
-      iconUrl: 'node_modules/leaflet/dist/images/marker-icon.png',
-      iconRetinaUrl: 'node_modules/leaflet/dist/images/marker-icon-2x.png',
-      shadowUrl: 'node_modules/leaflet/dist/images/marker-shadow.png',
-      iconSize: [25, 41],
-      iconAnchor: [12, 41],
-      popupAnchor: [1, -34],
-      shadowSize: [41, 41]
+    // Fix default marker icon issue in Leaflet + Angular
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'assets/leaflet/marker-icon-2x.png',
+      iconUrl: 'assets/leaflet/marker-icon.png',
+      shadowUrl: 'assets/leaflet/marker-shadow.png'
     });
-    (L.Marker.prototype as any).options.icon = defaultIcon;
 
-    // Initialize map centered on Nucet, Romania
-    this.map = L.map('map-container', {
+    // Initialize map centered on Nucet, Romania using ViewChild ref
+    this.map = L.map(this.mapContainer.nativeElement, {
       center: [46.4167, 22.6833], // Nucet coordinates
       zoom: 13,
       zoomControl: false

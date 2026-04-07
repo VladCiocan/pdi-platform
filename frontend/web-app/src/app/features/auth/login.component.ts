@@ -297,6 +297,7 @@ export class LoginComponent {
 
     this.authService.login({ email, password, twoFactorCode }).subscribe({
       next: () => {
+        this.loading.set(false);
         this.router.navigate(['/dashboard']);
       },
       error: (err) => {

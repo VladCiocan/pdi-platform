@@ -13,6 +13,7 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatStepperModule } from '@angular/material/stepper';
+import { catchError, of } from 'rxjs';
 import { UrbanismService } from '../../core/services/urbanism.service';
 import {
   UrbanismRegister,
@@ -729,24 +730,32 @@ export class UrbanismListComponent implements OnInit {
   }
 
   loadData() {
-    this.urbanismService.getUTRs().subscribe({
-      next: (data) => { this.utrs = data; this.stats.utrs = data.length; },
-      error: () => { this.utrs = this.getMockUTRs(); this.stats.utrs = this.utrs.length; }
+    this.urbanismService.getUTRs().pipe(
+      catchError(() => { this.showSnackBar('Eroare la incarcarea datelor'); return of([] as UrbanismUTR[]); })
+    ).subscribe((data) => {
+      this.utrs = data;
+      this.stats.utrs = data.length;
     });
 
-    this.urbanismService.getCertificates().subscribe({
-      next: (data) => { this.certificates = data; this.stats.certificates = data.length; },
-      error: () => { this.certificates = this.getMockCUs(); this.stats.certificates = this.certificates.length; }
+    this.urbanismService.getCertificates().pipe(
+      catchError(() => { this.showSnackBar('Eroare la incarcarea datelor'); return of([] as CertificateUrbanism[]); })
+    ).subscribe((data) => {
+      this.certificates = data;
+      this.stats.certificates = data.length;
     });
 
-    this.urbanismService.getAuthorizations().subscribe({
-      next: (data) => { this.authorizations = data; this.stats.authorizations = data.length; },
-      error: () => { this.authorizations = this.getMockACs(); this.stats.authorizations = this.authorizations.length; }
+    this.urbanismService.getAuthorizations().pipe(
+      catchError(() => { this.showSnackBar('Eroare la incarcarea datelor'); return of([] as Authorization[]); })
+    ).subscribe((data) => {
+      this.authorizations = data;
+      this.stats.authorizations = data.length;
     });
 
-    this.urbanismService.getRegisters().subscribe({
-      next: (data) => { this.registers = data; this.stats.registers = data.length; },
-      error: () => { this.registers = this.getMockRegisters(); this.stats.registers = this.registers.length; }
+    this.urbanismService.getRegisters().pipe(
+      catchError(() => { this.showSnackBar('Eroare la incarcarea datelor'); return of([] as UrbanismRegister[]); })
+    ).subscribe((data) => {
+      this.registers = data;
+      this.stats.registers = data.length;
     });
   }
 
@@ -910,33 +919,4 @@ export class UrbanismListComponent implements OnInit {
     };
   }
 
-  // Mock data
-  private getMockUTRs(): UrbanismUTR[] {
-    return [
-      { id: crypto.randomUUID(), code: 'UTR-01', name: 'Zona Centrală', zoningType: 'Mixed', potPercentage: 60, cutIndex: 2.5, maxFloors: 4, isActive: true },
-      { id: crypto.randomUUID(), code: 'UTR-02', name: 'Zona Rezidențială', zoningType: 'Residential', potPercentage: 35, cutIndex: 1.5, maxFloors: 2, isActive: true },
-      { id: crypto.randomUUID(), code: 'UTR-03', name: 'Zona Industrială', zoningType: 'Industrial', potPercentage: 70, cutIndex: 3.0, maxFloors: 1, isActive: true }
-    ];
-  }
-
-  private getMockCUs(): CertificateUrbanism[] {
-    return [
-      { id: crypto.randomUUID(), cuNumber: 'CU-2024-001', applicantId: crypto.randomUUID(), applicationDate: '2024-01-15', status: 'ISSUED', taxPaid: true, taxAmount: 150, isActive: true },
-      { id: crypto.randomUUID(), cuNumber: 'CU-2024-002', applicantId: crypto.randomUUID(), applicationDate: '2024-02-20', status: 'IN_PROGRESS', taxPaid: false, taxAmount: 200, isActive: true }
-    ];
-  }
-
-  private getMockACs(): Authorization[] {
-    return [
-      { id: crypto.randomUUID(), acNumber: 'AC-2024-001', authorizationType: 'CONSTRUIRE', applicantId: crypto.randomUUID(), applicationDate: '2024-01-20', status: 'ISSUED', builtArea: 150, totalArea: 200, taxPaid: true, isActive: true },
-      { id: crypto.randomUUID(), acNumber: 'AC-2024-002', authorizationType: 'CONSTRUIRE', applicantId: crypto.randomUUID(), applicationDate: '2024-03-01', status: 'IN_PROGRESS', builtArea: 80, totalArea: 120, taxPaid: false, isActive: true }
-    ];
-  }
-
-  private getMockRegisters(): UrbanismRegister[] {
-    return [
-      { id: crypto.randomUUID(), registerType: 'CU', registerNumber: 'REG-CU-2024', sessionDate: '2024-01-01', status: 'OPEN', totalRecords: 45, isActive: true },
-      { id: crypto.randomUUID(), registerType: 'AC_AD', registerNumber: 'REG-AC-2024', sessionDate: '2024-01-01', status: 'OPEN', totalRecords: 28, isActive: true }
-    ];
-  }
 }

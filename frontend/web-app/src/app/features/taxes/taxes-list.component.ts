@@ -8,6 +8,8 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatTabsModule } from '@angular/material/tabs';
 import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { catchError, of } from 'rxjs';
 import { TaxService } from '../../core/services/tax.service';
 import { TaxLiability } from '../../core/models';
 
@@ -23,7 +25,8 @@ import { TaxLiability } from '../../core/models';
     MatIconModule,
     MatChipsModule,
     MatTabsModule,
-    MatPaginatorModule
+    MatPaginatorModule,
+    MatSnackBarModule
   ],
   template: `
     <div class="page-container fade-in">
@@ -223,17 +226,29 @@ export class TaxesListComponent implements OnInit {
   totalPaid = signal(0);
   displayedColumns = ['year', 'category', 'totalDue', 'paid', 'remaining', 'dueDate', 'status', 'actions'];
 
-  constructor(private taxService: TaxService) {}
+  private snackBar: MatSnackBar;
+
+  constructor(private taxService: TaxService, snackBar: MatSnackBar) {
+    this.snackBar = snackBar;
+  }
 
   ngOnInit(): void {
     this.loadLiabilities();
   }
 
   loadLiabilities(): void {
-    this.taxService.getLiabilities().subscribe({
-      next: (data) => this.liabilities.set(data),
-      error: () => this.liabilities.set([])
+    this.taxService.getLiabilities().pipe(
+      catchError(() => { this.showSnackBar('Eroare la incarcarea datelor'); return of([]); })
+    ).subscribe((data) => {
+      this.liabilities.set(data);
+      this.totalPending.set(data.filter(l => l.status === 'PENDING').reduce((sum, l) => sum + (l.remainingAmount || 0), 0));
+      this.totalOverdue.set(data.filter(l => l.status === 'OVERDUE').reduce((sum, l) => sum + (l.remainingAmount || 0), 0));
+      this.totalPaid.set(data.filter(l => l.status === 'PAID').reduce((sum, l) => sum + (l.paidAmount || 0), 0));
     });
+  }
+
+  private showSnackBar(message: string) {
+    this.snackBar.open(message, 'Inchide', { duration: 3000 });
   }
 
   getStatusLabel(status: string): string {
