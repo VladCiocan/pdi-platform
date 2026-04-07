@@ -1,5 +1,6 @@
 C:\Users\devvl\test_opencode\pdi-platform\backend\auth-service\src\main\java\ro\pdi\auth\AuthServiceApplication.java
 C:\Users\devvl\test_opencode\pdi-platform\backend\auth-service\src\main\java\ro\pdi\auth\config\GlobalExceptionHandler.java
+C:\Users\devvl\test_opencode\pdi-platform\backend\auth-service\src\main\java\ro\pdi\auth\config\OpenApiConfig.java
 C:\Users\devvl\test_opencode\pdi-platform\backend\auth-service\src\main\java\ro\pdi\auth\config\SecurityConfig.java
 C:\Users\devvl\test_opencode\pdi-platform\backend\auth-service\src\main\java\ro\pdi\auth\controller\AuthController.java
 C:\Users\devvl\test_opencode\pdi-platform\backend\auth-service\src\main\java\ro\pdi\auth\dto\AuthResponse.java

@@ -1,5 +1,7 @@
 package ro.pdi.erp.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,8 +20,10 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/erp")
 @RequiredArgsConstructor
+@Tag(name = "ERP", description = "Planificare resurse - buget, contabilitate, HR, inventar")
 public class ErpController {
 
+    @Operation(summary = "Lista bugete")
     @GetMapping("/budgets")
     public ResponseEntity<List<ErpBudget>> getBudgets(
             @RequestParam(required = false) Integer year,
@@ -27,28 +31,33 @@ public class ErpController {
         return ResponseEntity.ok(List.of());
     }
 
+    @Operation(summary = "Creare buget")
     @PostMapping("/budgets")
     public ResponseEntity<ErpBudget> createBudget(@RequestBody ErpBudget budget) {
         return ResponseEntity.ok(budget);
     }
 
+    @Operation(summary = "Detalii buget")
     @GetMapping("/budgets/{id}")
     public ResponseEntity<ErpBudget> getBudget(@PathVariable UUID id) {
         return ResponseEntity.ok(ErpBudget.builder().id(id).build());
     }
 
+    @Operation(summary = "Lista executii bugetare")
     @GetMapping("/budget-executions")
     public ResponseEntity<List<ErpBudgetExecution>> getBudgetExecutions(
             @RequestParam UUID budgetId) {
         return ResponseEntity.ok(List.of());
     }
 
+    @Operation(summary = "Inregistrare executie bugetara")
     @PostMapping("/budget-executions")
     public ResponseEntity<ErpBudgetExecution> createBudgetExecution(
             @RequestBody ErpBudgetExecution execution) {
         return ResponseEntity.ok(execution);
     }
 
+    @Operation(summary = "Lista inregistrari contabile")
     @GetMapping("/accounting/entries")
     public ResponseEntity<List<ErpAccountingEntry>> getAccountingEntries(
             @RequestParam(required = false) String journal,
@@ -56,22 +65,26 @@ public class ErpController {
         return ResponseEntity.ok(List.of());
     }
 
+    @Operation(summary = "Creare inregistrare contabila")
     @PostMapping("/accounting/entries")
     public ResponseEntity<ErpAccountingEntry> createAccountingEntry(
             @RequestBody ErpAccountingEntry entry) {
         return ResponseEntity.ok(entry);
     }
 
+    @Operation(summary = "Detalii inregistrare contabila")
     @GetMapping("/accounting/entries/{id}")
     public ResponseEntity<ErpAccountingEntry> getAccountingEntry(@PathVariable UUID id) {
         return ResponseEntity.ok(ErpAccountingEntry.builder().id(id).build());
     }
 
+    @Operation(summary = "Linii inregistrare contabila")
     @GetMapping("/accounting/entries/{id}/lines")
     public ResponseEntity<List<ErpAccountingLine>> getAccountingLines(@PathVariable UUID id) {
         return ResponseEntity.ok(List.of());
     }
 
+    @Operation(summary = "Lista angajati")
     @GetMapping("/hr/employees")
     public ResponseEntity<List<ErpEmployee>> getEmployees(
             @RequestParam(required = false) String department,
@@ -79,16 +92,19 @@ public class ErpController {
         return ResponseEntity.ok(List.of());
     }
 
+    @Operation(summary = "Adaugare angajat")
     @PostMapping("/hr/employees")
     public ResponseEntity<ErpEmployee> createEmployee(@RequestBody ErpEmployee employee) {
         return ResponseEntity.ok(employee);
     }
 
+    @Operation(summary = "Detalii angajat")
     @GetMapping("/hr/employees/{id}")
     public ResponseEntity<ErpEmployee> getEmployee(@PathVariable UUID id) {
         return ResponseEntity.ok(ErpEmployee.builder().id(id).build());
     }
 
+    @Operation(summary = "Lista state de plata")
     @GetMapping("/hr/payroll")
     public ResponseEntity<List<ErpPayroll>> getPayrolls(
             @RequestParam UUID employeeId,
@@ -96,18 +112,21 @@ public class ErpController {
         return ResponseEntity.ok(List.of());
     }
 
+    @Operation(summary = "Calculare stat de plata")
     @PostMapping("/hr/payroll/calculate")
     public ResponseEntity<List<ErpPayroll>> calculatePayroll(
             @RequestParam java.time.LocalDate period) {
         return ResponseEntity.ok(List.of());
     }
 
+    @Operation(summary = "Aprobare stat de plata")
     @PostMapping("/hr/payroll/approve")
     public ResponseEntity<Void> approvePayroll(
             @RequestParam java.time.LocalDate period) {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(summary = "Lista articole inventar")
     @GetMapping("/inventory/items")
     public ResponseEntity<List<ErpInventoryItem>> getInventoryItems(
             @RequestParam(required = false) String category,
@@ -115,17 +134,20 @@ public class ErpController {
         return ResponseEntity.ok(List.of());
     }
 
+    @Operation(summary = "Adaugare articol inventar")
     @PostMapping("/inventory/items")
     public ResponseEntity<ErpInventoryItem> createInventoryItem(
             @RequestBody ErpInventoryItem item) {
         return ResponseEntity.ok(item);
     }
 
+    @Operation(summary = "Detalii articol inventar")
     @GetMapping("/inventory/items/{id}")
     public ResponseEntity<ErpInventoryItem> getInventoryItem(@PathVariable UUID id) {
         return ResponseEntity.ok(ErpInventoryItem.builder().id(id).build());
     }
 
+    @Operation(summary = "Lista mijloace fixe")
     @GetMapping("/inventory/assets")
     public ResponseEntity<List<ErpFixedAsset>> getFixedAssets(
             @RequestParam(required = false) String assetCategory,
@@ -133,16 +155,19 @@ public class ErpController {
         return ResponseEntity.ok(List.of());
     }
 
+    @Operation(summary = "Inregistrare mijloc fix")
     @PostMapping("/inventory/assets")
     public ResponseEntity<ErpFixedAsset> createFixedAsset(@RequestBody ErpFixedAsset asset) {
         return ResponseEntity.ok(asset);
     }
 
+    @Operation(summary = "Detalii mijloc fix")
     @GetMapping("/inventory/assets/{id}")
     public ResponseEntity<ErpFixedAsset> getFixedAsset(@PathVariable UUID id) {
         return ResponseEntity.ok(ErpFixedAsset.builder().id(id).build());
     }
 
+    @Operation(summary = "Calculare amortizare mijloc fix")
     @PostMapping("/inventory/assets/{id}/depreciate")
     public ResponseEntity<ErpFixedAsset> calculateDepreciation(@PathVariable UUID id) {
         return ResponseEntity.ok(ErpFixedAsset.builder().id(id).build());

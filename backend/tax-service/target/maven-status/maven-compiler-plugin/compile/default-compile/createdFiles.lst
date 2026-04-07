@@ -6,6 +6,7 @@ ro\pdi\tax\model\TaxDeclaration$DeclarationType.class
 ro\pdi\tax\model\TaxLiability$LiabilityStatus.class
 ro\pdi\tax\model\TaxDeclaration.class
 ro\pdi\tax\repository\TaxCategoryRepository.class
+ro\pdi\tax\config\OpenApiConfig.class
 ro\pdi\tax\service\TaxCalculationService$1.class
 ro\pdi\tax\model\TaxPayment$PaymentType.class
 ro\pdi\tax\service\PaymentService.class

@@ -1,5 +1,7 @@
 package ro.pdi.gis.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -9,8 +11,10 @@ import java.util.*;
 @RestController
 @RequestMapping("/api/v1/gis")
 @RequiredArgsConstructor
+@Tag(name = "GIS", description = "Sistem informatic geografic - straturi, features, analize spatiale")
 public class GisController {
 
+    @Operation(summary = "Lista straturi GIS")
     @GetMapping("/layers")
     public ResponseEntity<List<Map<String, Object>>> getLayers() {
         List<Map<String, Object>> layers = Arrays.asList(
@@ -24,6 +28,7 @@ public class GisController {
         return ResponseEntity.ok(layers);
     }
 
+    @Operation(summary = "Features dintr-un strat GIS")
     @GetMapping("/layers/{layerId}/features")
     public ResponseEntity<Map<String, Object>> getLayerFeatures(
             @PathVariable String layerId,
@@ -41,6 +46,7 @@ public class GisController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Cautare spatiala")
     @GetMapping("/search")
     public ResponseEntity<List<Map<String, Object>>> search(
             @RequestParam String query,
@@ -48,6 +54,7 @@ public class GisController {
         return ResponseEntity.ok(new ArrayList<>());
     }
 
+    @Operation(summary = "Geocodare inversa")
     @GetMapping("/reverse-geocode")
     public ResponseEntity<Map<String, Object>> reverseGeocode(
             @RequestParam Double lat,
@@ -61,6 +68,7 @@ public class GisController {
         return ResponseEntity.ok(result);
     }
 
+    @Operation(summary = "Creare zona buffer")
     @GetMapping("/buffer")
     public ResponseEntity<Map<String, Object>> createBuffer(
             @RequestParam Double lat,
@@ -75,6 +83,7 @@ public class GisController {
         return ResponseEntity.ok(response);
     }
 
+    @Operation(summary = "Gasire intersectii intre straturi")
     @GetMapping("/intersects")
     public ResponseEntity<List<Map<String, Object>>> findIntersections(
             @RequestParam String layer1,
@@ -87,6 +96,7 @@ public class GisController {
         return ResponseEntity.ok(new ArrayList<>());
     }
 
+    @Operation(summary = "Obtinere ortofotoplan")
     @GetMapping("/raster/orthophoto")
     public ResponseEntity<Map<String, Object>> getOrthophoto(
             @RequestParam Double bboxMinX,
@@ -104,6 +114,7 @@ public class GisController {
         return ResponseEntity.ok(result);
     }
 
+    @Operation(summary = "Export date GIS")
     @GetMapping("/export")
     public ResponseEntity<Map<String, Object>> exportData(
             @RequestParam String layer,
@@ -118,6 +129,7 @@ public class GisController {
         return ResponseEntity.ok(result);
     }
 
+    @Operation(summary = "Statistici strat GIS")
     @GetMapping("/stats/layer/{layerId}")
     public ResponseEntity<Map<String, Object>> getLayerStats(@PathVariable String layerId) {
         Map<String, Object> stats = new HashMap<>();

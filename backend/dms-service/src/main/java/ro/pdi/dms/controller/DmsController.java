@@ -1,5 +1,7 @@
 package ro.pdi.dms.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -19,21 +21,25 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/v1/dms")
 @RequiredArgsConstructor
+@Tag(name = "Documente", description = "Management documente - foldere, documente, versiuni")
 public class DmsController {
 
     private final FolderService folderService;
     private final DocumentService documentService;
 
+    @Operation(summary = "Lista foldere root")
     @GetMapping("/folders")
     public ResponseEntity<List<DmsFolder>> getRootFolders() {
         return ResponseEntity.ok(folderService.getRootFolders());
     }
 
+    @Operation(summary = "Lista subfoldere")
     @GetMapping("/folders/{parentId}/children")
     public ResponseEntity<List<DmsFolder>> getChildFolders(@PathVariable UUID parentId) {
         return ResponseEntity.ok(folderService.getChildFolders(parentId));
     }
 
+    @Operation(summary = "Creare folder")
     @PostMapping("/folders")
     public ResponseEntity<DmsFolder> createFolder(
             @Valid @RequestBody FolderRequest request,
@@ -41,6 +47,7 @@ public class DmsController {
         return ResponseEntity.ok(folderService.createFolder(request, ownerId));
     }
 
+    @Operation(summary = "Actualizare folder")
     @PutMapping("/folders/{id}")
     public ResponseEntity<DmsFolder> updateFolder(
             @PathVariable UUID id,
@@ -48,12 +55,14 @@ public class DmsController {
         return ResponseEntity.ok(folderService.updateFolder(id, request));
     }
 
+    @Operation(summary = "Stergere folder")
     @DeleteMapping("/folders/{id}")
     public ResponseEntity<Void> deleteFolder(@PathVariable UUID id) {
         folderService.deleteFolder(id);
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Lista documente")
     @GetMapping("/documents")
     public ResponseEntity<List<DmsDocument>> getDocuments(
             @RequestParam(required = false) UUID folderId,
@@ -76,11 +85,13 @@ public class DmsController {
         return ResponseEntity.ok(documentService.getAllActiveDocuments());
     }
 
+    @Operation(summary = "Detalii document")
     @GetMapping("/documents/{id}")
     public ResponseEntity<DmsDocument> getDocument(@PathVariable UUID id) {
         return ResponseEntity.ok(documentService.getDocumentById(id));
     }
 
+    @Operation(summary = "Creare document")
     @PostMapping("/documents")
     public ResponseEntity<DmsDocument> createDocument(
             @Valid @RequestBody DocumentRequest request,
@@ -88,6 +99,7 @@ public class DmsController {
         return ResponseEntity.ok(documentService.createDocument(request, ownerId));
     }
 
+    @Operation(summary = "Actualizare document")
     @PutMapping("/documents/{id}")
     public ResponseEntity<DmsDocument> updateDocument(
             @PathVariable UUID id,
@@ -95,17 +107,20 @@ public class DmsController {
         return ResponseEntity.ok(documentService.updateDocument(id, request));
     }
 
+    @Operation(summary = "Stergere document")
     @DeleteMapping("/documents/{id}")
     public ResponseEntity<Void> deleteDocument(@PathVariable UUID id) {
         documentService.deleteDocument(id);
         return ResponseEntity.noContent().build();
     }
 
+    @Operation(summary = "Lista versiuni document")
     @GetMapping("/documents/{id}/versions")
     public ResponseEntity<List<DmsDocumentVersion>> getVersions(@PathVariable UUID id) {
         return ResponseEntity.ok(documentService.getDocumentVersions(id));
     }
 
+    @Operation(summary = "Detalii versiune document")
     @GetMapping("/documents/{id}/versions/{version}")
     public ResponseEntity<DmsDocumentVersion> getVersion(
             @PathVariable UUID id,
@@ -113,6 +128,7 @@ public class DmsController {
         return ResponseEntity.ok(documentService.getVersion(id, version));
     }
 
+    @Operation(summary = "Incarcare versiune fisier")
     @PostMapping("/documents/{id}/upload")
     public ResponseEntity<DmsDocument> uploadFileVersion(
             @PathVariable UUID id,
@@ -126,11 +142,13 @@ public class DmsController {
                 id, filePath, fileSize, contentType, checksum, userId, changeDescription));
     }
 
+    @Operation(summary = "Metadate document")
     @GetMapping("/documents/{id}/metadata")
     public ResponseEntity<List<DmsDocumentMetadata>> getMetadata(@PathVariable UUID id) {
         return ResponseEntity.ok(documentService.getDocumentMetadata(id));
     }
 
+    @Operation(summary = "Adaugare metadate document")
     @PostMapping("/documents/{id}/metadata")
     public ResponseEntity<DmsDocument> addMetadata(
             @PathVariable UUID id,

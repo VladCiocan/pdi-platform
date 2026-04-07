@@ -1,4 +1,6 @@
 C:\Users\devvl\test_opencode\pdi-platform\backend\dms-service\src\main\java\ro\pdi\dms\config\MinioConfig.java
+C:\Users\devvl\test_opencode\pdi-platform\backend\dms-service\src\main\java\ro\pdi\dms\config\OpenApiConfig.java
+C:\Users\devvl\test_opencode\pdi-platform\backend\dms-service\src\main\java\ro\pdi\dms\config\SecurityConfig.java
 C:\Users\devvl\test_opencode\pdi-platform\backend\dms-service\src\main\java\ro\pdi\dms\controller\DmsController.java
 C:\Users\devvl\test_opencode\pdi-platform\backend\dms-service\src\main\java\ro\pdi\dms\DmsServiceApplication.java
 C:\Users\devvl\test_opencode\pdi-platform\backend\dms-service\src\main\java\ro\pdi\dms\dto\DocumentRequest.java

@@ -1,5 +1,7 @@
 package ro.pdi.tax.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,6 +12,7 @@ import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/taxes")
+@Tag(name = "Taxe si Impozite", description = "Gestionare taxe, impozite, proprietati si plati")
 public class TaxController {
 
     private final TaxPropertyRepository taxPropertyRepository;
@@ -31,6 +34,7 @@ public class TaxController {
         this.taxCategoryRepository = taxCategoryRepository;
     }
 
+    @Operation(summary = "Lista proprietati impozabile")
     @GetMapping("/properties")
     public ResponseEntity<List<TaxProperty>> getProperties(
             @RequestParam(required = false) UUID ownerId,
@@ -44,6 +48,7 @@ public class TaxController {
         return ResponseEntity.ok(taxPropertyRepository.findAll());
     }
 
+    @Operation(summary = "Detalii proprietate")
     @GetMapping("/properties/{id}")
     public ResponseEntity<TaxProperty> getProperty(@PathVariable UUID id) {
         return taxPropertyRepository.findById(id)
@@ -51,11 +56,13 @@ public class TaxController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Operation(summary = "Adaugare proprietate noua")
     @PostMapping("/properties")
     public ResponseEntity<TaxProperty> createProperty(@RequestBody TaxProperty property) {
         return ResponseEntity.ok(taxPropertyRepository.save(property));
     }
 
+    @Operation(summary = "Lista declaratii fiscale")
     @GetMapping("/declarations")
     public ResponseEntity<List<TaxDeclaration>> getDeclarations(
             @RequestParam(required = false) UUID contributorId,
@@ -69,6 +76,7 @@ public class TaxController {
         return ResponseEntity.ok(taxDeclarationRepository.findAll());
     }
 
+    @Operation(summary = "Lista obligatii fiscale")
     @GetMapping("/liabilities")
     public ResponseEntity<List<TaxLiability>> getLiabilities(
             @RequestParam(required = false) UUID contributorId,
@@ -86,6 +94,7 @@ public class TaxController {
         return ResponseEntity.ok(taxLiabilityRepository.findAll());
     }
 
+    @Operation(summary = "Lista plati efectuate")
     @GetMapping("/payments")
     public ResponseEntity<List<TaxPayment>> getPayments(
             @RequestParam(required = false) UUID contributorId,
@@ -99,6 +108,7 @@ public class TaxController {
         return ResponseEntity.ok(taxPaymentRepository.findAll());
     }
 
+    @Operation(summary = "Lista categorii de taxe")
     @GetMapping("/categories")
     public ResponseEntity<List<TaxCategory>> getCategories() {
         return ResponseEntity.ok(taxCategoryRepository.findByIsActiveTrue());

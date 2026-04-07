@@ -5,6 +5,7 @@ ro\pdi\agriculture\model\AgricultureParcel$AgricultureParcelBuilder.class
 ro\pdi\agriculture\model\AgricultureMember$AgricultureMemberBuilder.class
 ro\pdi\agriculture\model\AgricultureHousehold.class
 ro\pdi\agriculture\model\AgricultureParcel$ParcelCategory.class
+ro\pdi\agriculture\config\SecurityConfig.class
 ro\pdi\agriculture\model\AgricultureParcel$UsageType.class
 ro\pdi\agriculture\controller\AgricultureController.class
 ro\pdi\agriculture\model\AgricultureAnimal.class
@@ -14,5 +15,6 @@ ro\pdi\agriculture\model\AgricultureMember$MemberType.class
 ro\pdi\agriculture\AgricultureServiceApplication.class
 ro\pdi\agriculture\model\AgricultureParcel.class
 ro\pdi\agriculture\model\AgricultureMember.class
+ro\pdi\agriculture\config\OpenApiConfig.class
 ro\pdi\agriculture\model\AgricultureHousehold$AgricultureHouseholdBuilder.class
 ro\pdi\agriculture\model\AgricultureAnimal$AnimalType.class

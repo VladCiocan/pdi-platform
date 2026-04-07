@@ -13,6 +13,7 @@ ro\pdi\dms\model\DmsWorkflow.class
 ro\pdi\dms\model\DmsDocumentVersion$DmsDocumentVersionBuilder.class
 ro\pdi\dms\model\DmsWorkflowInstance$InstanceStatus.class
 ro\pdi\dms\controller\DmsController.class
+ro\pdi\dms\config\SecurityConfig.class
 ro\pdi\dms\model\DmsDocument$RetentionPolicy.class
 ro\pdi\dms\model\DmsDocumentVersion.class
 ro\pdi\dms\service\FolderService.class
@@ -24,6 +25,7 @@ ro\pdi\dms\repository\DmsWorkflowRepository.class
 ro\pdi\dms\dto\DocumentRequest.class
 ro\pdi\dms\repository\DmsFolderRepository.class
 ro\pdi\dms\model\DmsDocument$DmsDocumentBuilder.class
+ro\pdi\dms\config\OpenApiConfig.class
 ro\pdi\dms\repository\DmsDocumentVersionRepository.class
 ro\pdi\dms\model\DmsWorkflowTask.class
 ro\pdi\dms\service\StorageService.class

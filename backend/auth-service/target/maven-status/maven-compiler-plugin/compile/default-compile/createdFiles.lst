@@ -5,6 +5,7 @@ ro\pdi\auth\repository\UserRepository.class
 ro\pdi\auth\model\UserRole$UserRoleId.class
 ro\pdi\auth\repository\UserRoleRepository.class
 ro\pdi\auth\service\AuthService.class
+ro\pdi\auth\config\OpenApiConfig.class
 ro\pdi\auth\dto\AuthResponse$PermissionDTO.class
 ro\pdi\auth\dto\ChangePasswordRequest$ChangePasswordRequestBuilder.class
 ro\pdi\auth\security\annotations\PreAuthorizePermission.class

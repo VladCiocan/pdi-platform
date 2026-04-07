@@ -9,3 +9,12 @@ logging:
   level:
     ro.pdi.gis: INFO
     org.springframework.web: INFO
+
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    operationsSorter: method
+    tagsSorter: alpha
+    tryItOutEnabled: true

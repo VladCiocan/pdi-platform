@@ -12,6 +12,8 @@ ro\pdi\erp\model\hr\ErpEmployee$EmploymentType.class
 ro\pdi\erp\model\budget\ErpBudget$ErpBudgetBuilder.class
 ro\pdi\erp\model\budget\ErpBudget.class
 ro\pdi\erp\model\hr\ErpPayroll$PayrollStatus.class
+ro\pdi\erp\config\SecurityConfig.class
+ro\pdi\erp\config\OpenApiConfig.class
 ro\pdi\erp\model\accounting\ErpAccountingEntry$ErpAccountingEntryBuilder.class
 ro\pdi\erp\model\inventory\ErpInventoryItem$InventoryMethod.class
 ro\pdi\erp\model\hr\ErpPayroll.class
